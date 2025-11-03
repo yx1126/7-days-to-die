@@ -1,0 +1,1229 @@
+<!-- *** xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+<!-- **** 文档 -->
+<!-- *** 在全文中搜索 ### 以找到文档内容目录 -->
+<!-- *** xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+<!--
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### <buff> 节点属性 (NODE ATTRIBUTES)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+name : Buff的内部名称，用于引用。不要在名称中使用纯数字，如 MyBuff1。Unity 不擅长为此类名称创建哈希值。
+name_key : 本地化的名称键（用于显示在游戏中的名称）。
+description_key : 本地化的描述键。Buff 的描述可以包含多个变量（如果使用过多可能导致延迟）。
+tooltip_key : 本地化的工具提示键，当 Buff 激活时显示在工具腰带上方。
+icon [file name] : 图标集中的可用 .tga 文件名，路径为 \Assets\GUI\Textures\，例如 "ui_game_symbol_brokenbone"。
+icon_color [RGB] : 图标的着色。如果设置为 "255,0,0"，图标将会闪烁。
+icon_blink [bool] : 在 Buff 的整个持续时间内使图标闪烁。
+hidden [bool] : 在所有屏幕上隐藏此 Buff 的显示。
+showonhud [bool] : 默认值为 true。设置为 false 时，此 Buff 将不会在主 HUD 上显示，但仍会出现在角色窗口的状态效果完整列表中。
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### <buff> 子节点 (CHILD NODES)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<damage_source value="x"/>
+<!-- value 可选值: [Internal, External] -->
+<!-- External (外部伤害) 是整数，会受到护甲影响。Internal (内部伤害) 是 Buff 的默认伤害类型，通常不受护甲直接减免。-->
+External damage will be integers and affected by armor, Internal is the default for buffs
+
+<damage_type value="x"/>
+<!-- value 可选值: 所有伤害类型都有效，代码可能会根据特定类型执行不同逻辑。-->
+<!-- Systemic (系统性伤害): Disease (疾病), Infection (感染), Starvation (饥饿), Dehydration (脱水), Falling (摔落), Suffocation (窒息), BloodLoss (失血), Sprain (扭伤), Break (骨折), Stun (眩晕), Concuss (脑震荡), KnockOut (击晕), BlackOut (昏迷), KnockDown (击倒), BarbedWire (铁丝网), Suicide (自杀), VehicleInside (载具内) -->
+<!-- Physical (物理伤害): Piercing (穿刺), Slashing (挥砍), Bashing (钝击), Crushing (碾压), Corrosive (腐蚀) -->
+<!-- Elemental (元素伤害): Heat (火焰), Cold (冰冷), Radiation (辐射), Toxic (毒素), Electrical (闪电) -->
+All are valid and code may look for specific ones.
+Systemic: Disease,Infection,Starvation,Dehydration,Falling,Suffocation,BloodLoss,Sprain,Break,Stun,Concuss,KnockOut,BlackOut,KnockDown,BarbedWire,Suicide,VehicleInside
+Physical: Piercing,Slashing,Bashing,Crushing,Corrosive
+Elemental: Heat,Cold,Radiation,Toxic,Electrical
+
+<stack_type value="x"/>
+<!-- value 可选值: [duration, effect, replace, ignore] -->
+<!-- duration (持续时间叠加): 延长总持续时间。 -->
+<!-- effect (效果叠加): 叠加效果的强度（例如，多次流血造成更高伤害）。 -->
+<!-- replace (替换): 重置持续时间。 -->
+<!-- ignore (忽略): 后续施加的相同 Buff 无效。 -->
+duration: append the duration
+effect: stack up the effect
+replace: reset the duration
+ignore: 2nd buff bounces
+
+<duration value="x"/>
+<!-- (浮点数 Float): 持续时间（真实时间秒）。0 表示无限。最大持续时间为 214748364 秒。 -->
+(Float) : Duration in RT seconds. 0 means infinite. 214748364s is the max duration.
+
+<update_rate value="x"/>
+<!-- (无符号短整型 ushort，每秒 20 个 tick): 默认值为 1，即每秒更新一次。最大更新速率为 3275 秒。 -->
+<!-- 这是 Buff 的时间步长，决定了 onSelfBuffUpdate 触发器的运行频率。 -->
+<!-- 如果 Buff 不包含 onSelfBuffUpdate 触发器，则此属性无关紧要，因为没有更新在运行。 -->
+(ushort at 20 ticks/s) Default = 1 update /s. 3275s is the max update_rate.
+The time step of this buff. How frequently onSelfBuffUpdate is run.
+If the buff does not contain an onSelfBuffUpdate trigger then this is irrelevant. No updates are running.
+
+<display_value value="_coretemp"/>
+<!-- Buff 可以显示一个 cvar (自定义变量) 的值以提供额外信息。例如，显示核心体温。 -->
+The buff can display the value of a cvar for additional information.
+
+<display_value_key value="+{0}°"/>
+<!-- 可以直接使用格式化字符串，也可以使用本地化键。 -->
+<!-- 可以根据 ToString 的规则格式化数字。 -->
+<!-- 例如，cvar=5.30: "{0}" 显示 5, "{0:0.00}" 显示 5.30, "{0:0.##}" 显示 5.3 -->
+A direct format like this can be used or a localization key.
+Can use formatting for the number according to ToString.
+cvar=5.30,  "{0}" : 5,  {0:0.00} : 5.30,  {0:0.##} : 5.3
+
+<display_value_format value="time"/>
+<!-- 除了 display_value_key，你也可以用这个来将 cvar 的值（以秒为单位）显示为时间格式。 -->
+Instead of display_value_key, you can use this to display the cvar as a time, based on seconds.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 需求与效果组 (REQUIREMENTS AND EFFECT GROUPS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 当一个 requirement (需求) 元素位于 effect_group (效果组) 元素之外时，它可以根据测试的逻辑阻止整个 Buff 的触发。 -->
+<!-- 下面的例子展示了 OR (或) 运算符的用法，然而，AND (与) 是所有需求的默认逻辑。 -->
+When a requirement element is outside of an effect_group element, it can prevent the entire buff from firing depending on logic tested.
+The example below is for the OR operator, however, AND is the default for all requirements.
+	<requirements compare_type="or">
+		<requirement name="CVarCompare" target="self" cvar="holdBreathTest" operation="Equals" value="0"/>
+	</requirements>
+
+
+*** Allan_TO_DO: This section needs more work. (此部分需要更多工作)
+
+<!-- 如果条件为 false，则此效果组无效。 -->
+<!-- 任何 passive_effect (被动效果) 或 triggered_effect (触发效果) 都应放入效果组中。 -->
+This effect group of the buff is invalid if the condition is false.
+Any passive_effect or triggered_effect go into an effect group.
+	<effect_group>
+		<requirement name="CVarCompare" target="self" cvar="holdBreathTest" operation="Equals" value="2"/>
+	</effect_group>
+
+<!-- 这个 Buff 的第二个效果组始终激活，但这个特定的效果有它自己的条件。 -->
+This 2nd effect group of this buff is always active, but this specific effect has it's own condition.
+	<effect_group>
+		<triggered_effect trigger="onSelfPrimaryAction" action="ModifyStats" target="self" stat="health" operation="base_add" value="2" compare_type="or">
+			<requirement name="StatCompare" target="other" stat="health" operation="gt" value="20"/>
+		</triggered_effect>
+
+		<!-- 对单个被动效果设置特定时间： -->
+		<!-- 这个被动效果在 Buff 开始后 2.2 秒生效，并在 3.5 秒时停止。 -->
+		Specific timing on individual PASSIVE effects:
+		<passive_effect name="SpreadMultiplierAiming" operation="perc_set" value="0.8" duration="2.2,3.5"/>
+			This one passive effect kicks in at 2.2s into the buff and shuts down at 3.5s.
+
+		<!-- 这个被动效果在 1.2 秒时生效，乘数为 0.8。 -->
+		<!-- 在接下来的 6.8 秒内，它将乘数线性插值到 0.15。 -->
+		<!-- 8 秒后（1.2 + 6.8），效果关闭。 -->
+		<passive_effect name="SpreadMultiplierAiming" operation="perc_set" value="0.8,0.15" duration="1.2,8"/>
+			This one PASSIVE effect kicks in at 1.2s with a multiplier of 0.8.
+			For the next 6.8s it lerps the multiplier to 0.15.
+			After 6.8s it shuts off.
+	</effect_group>
+</buff>
+
+***
+
+
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 命名的效果组 (NAMED EFFECT GROUPS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<effect_group name="This is an example group name" tiered="false"/> node
+
+name : 没有实际功能，但为用户提供了一种组织效果组的方式。
+tiered (Bool) : 在物品 (ITEMS) 上，这表示一个无等级、始终生效的效果。如果为默认值或 true，则物品有等级且不可叠加。
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 使用自定义变量 (USING CUSTOM VARIABLES A.K.A. "cvar")
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 当你使用一个自定义变量 (浮点数) 时，它会在目标实体上被声明。 -->
+A custom variable (float) is declared on the target entity whenever you use one.
+
+	<triggered_effect trigger="onSelfAimingGunStop" action="ModifyCVar" target="self" cvar="iAmYourNewCVar" operation="set" value="5"/>
+
+<!-- 当使用自定义变量代替固定值时，你需要用 "@" 符号来引用它，而不是一个数值。 -->
+When USING a custom variable INSTEAD OF a fixed value you reference it with an "@" instead of a numeric value.
+
+	<passive_effect name="JumpStrength" operation="perc_set" value="@iAmYourNewCVar"/>
+	<requirement name="StatCompare" target="self" stat="stamina" operation="GTE" value="@iAmYourNewCVar"/>
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 游戏变量 (GAME VARIABLES)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 游戏变量是只读的常量。 -->
+<!-- 无论其数据类型是什么，它们都可以在需求 (requirements) 或值 (values) 中使用。 -->
+Game variables are constants that are read-only.
+No matter what data type it is, they can be USED in requirements / values.
+
+	<passive_effect name="JumpStrength" operation="perc_set" value="#GameTime"/>
+	<requirement name="StatCompare" target="self" stat="stamina" operation="GTE" value="#GameTime"/>
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 操作与 CVARS、游戏变量 (OPERATIONS AND CVARS, game variables)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+cvar : 自定义变量名。可以使用任何你想要的名称。
+operation [set,setvalue,add,subtract,multiply,divide,randomfloat,randomint] : 操作类型。
+value (Float,@cvar,#gameVariable) : 以 @ 或 # 开头将解析现有 cvar 或游戏变量的值，而不是一个数字。
+value="randomfloat(1,10)" / value="randomint(1,10)" : 这会生成一个随机数用于 cvar 操作。
+	<triggered_effect trigger="onSelfBuffUpdate" action="ModifyCVar" cvar="test2" operation="set" value="randomint(1,10)"/>
+
+<!-- 以 "_" 开头的 cvar 是只读的： -->
+Read only cvars start with an underscore:
+
+_degreesabsorbed : 护甲吸收的温度；总是正数；与 70°F 的偏差。
+_coretemp : 与 70°F 的温差。
+_sheltered : 0-1 的值，表示你所在区域的封闭程度。
+_shaded : 类似于 sheltered，但只检查上方。
+_wetness : 来自雨水和站在水中的总湿度，1 = 100% 湿。
+_underwater : 是否在水下。
+_difficulty : 游戏难度设置。
+_biomeradiation : 生物群系的辐射值。
+_encumberedslots : 超出负重的物品栏格子数。
+_encumbrance : 负重值。
+_fallSpeed : 掉落速度。
+_crouching : 是否蹲伏。
+_notAlerted : 检查 (!isAlert && !isDead)，其中 isAlert 由正在倒计时的警觉度 tick 定义。有 4 个 tick 的延迟，以便实体可以受到潜行伤害，而不必担心在同一 tick 被枪声惊醒。
+_stunned : 是否被击晕 (0/1)。
+ragdoll : 实体处于布娃娃状态时为 1。
+
+<!-- 以 "%" 开头的 CVars 是网络同步的。 -->
+<!-- 用于在客户端之间正确同步特殊情况的 CVars，例如 buffBurningMolotovDuration 以显示火焰粒子。 -->
+CVars that start with "%" are networked.
+Used to push special case CVars such as buffBurningMolotovDuration to show fire particles between clients properly.
+
+<!-- 以 "$" 开头的 CVars 是非网络同步的。 -->
+<!-- 你可以在本地使用它们进行数学运算，但不能在不同实体之间访问。 -->
+CVars that start with "$" are NOT networked.
+You can use them locally and for math operations but they cannot be accessed between different entities.
+
+<!-- 以 "." 开头的 CVars 是非网络同步的，并且不会随游戏存档保存。 -->
+CVars that start with "." are NOT networked AND they are not saved with the game.
+
+<!-- 你可以对另一个实体设置 .variables，但不能读取它们。 -->
+You can SET .variables to another entity. You just cannot read them.
+	<triggered_effect trigger="onSelfSecondaryActionRayHit" action="ModifyCVar" target="other" cvar=".somethingsomething" operation="set" value="1"/>
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 需求 / 条件 (REQUIREMENTS / CONDITIONS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<requirement name="StatCompare" target="self" stat="stamina" operation="GTE" value="3"/>
+
+<!-- 这会反转条件（! 表示“非”）： -->
+This inverts the condition:
+<requirement name="!StatCompare" target="self" stat="stamina" operation="GTE" value="3"/>
+
+
+<!-- TARGET= : 目标，见下文 -->
+TARGET= : see below
+
+<!-- invert="true" : 布尔值，反转条件 -->
+invert				boolean, inverts the condition
+
+	RandomRoll:				target, min_max, operation, value, seed_type, seed_additive
+			<!-- seed_type (种子类型): Item (物品), Player (玩家), Random (随机) -->
+			<!-- Random 是大多数情况下的默认值，一个简单的随机数。 -->
+			<!-- Player 是此玩家在此地图上的静态种子。你可以创建永久伴随此玩家的随机“遗传”效果。 -->
+			<!-- Item 使用基于物品创建时间生成的种子（所以理论上可以用来检测复制品）。 -->
+			seed_type:		Item, Player, Random
+							Random is the default in most cases. A simple random number.
+							Player is the static seed of this player on this map. You can create random "genetic" effects that permanently remain with this player.
+							Item uses a seed that is generated based on creation time of the item. (so yes, that could detect dupes with some certainty, you're welcome)
+
+	CVarCompare				target, cvar, operation, value (比较 cvar 值)
+	HasBuff					target, buff (检查是否拥有某个 Buff)
+	NotHasBuff				target, buff (检查是否没有某个 Buff)
+	IsMale					target (是否为男性)
+	IsAlive					(是否存活)
+	IsSleeping				if target (zombie) is a sleeper (如果目标（僵尸）是休眠状态)
+	NPCIsAlert				similar to _notAlerted cvar but does not have a built-in delay (类似于 _notAlerted cvar，但没有内置延迟)
+	IsAttachedToEntity		(是否附着在某个实体上)
+	EntityTagCompare		tags (list of tags); has_all_tags(bool); target  // 匹配 entityclasses.xml 中的 <property name="Tags" value="entity,player"/>
+	RequirementItemTier		target, tier, operation, value (物品等级需求)
+	ProgressionLevel		target, progression_name="attStrength" (or a perk name, whatever), operation, value (技能/专精等级)
+	PlayerLevel				target, operation, value (玩家等级)
+	CompareLightLevel		(比较光照等级)
+	HoldingItemHasTags		tags (string), has_all_tags(bool);  does not check for the tags of a mod that is installed in the item (检查手持物品的标签，不检查安装的模组)
+							<!-- 理论上 <passive_effect name="EntityDamage" operation="perc_add" value="100" tags="club"/> 会匹配手持/装备物品的标签，但不能保证每个代码都传递了标签。你可以试试。 =) -->
+							*in theory* <passive_effect name="EntityDamage" operation="perc_add" value="100" tags="club"/>
+							will match tags on a held/equipped item but there is no guarantee every coder has passed the tags to every bit of code. You can try it. =)
+	ItemHasTags				similar to HoldingItemHasTags but references the item causing an action, like a thrown spear that is no longer "held" at this point (类似于 HoldingItemHasTags，但引用的是引起动作的物品，比如已经扔出去的长矛)
+	ProjectileHasTags		(抛射物有标签)
+	HoldingItemBroken		(手持物品已损坏)
+
+	IsItemActive			(?) For activated items. Use only on the item/mod in question or the scope gets messy. (用于已激活的物品，仅在相关物品/模组上使用)
+	IsLookingAtBlock		(not hooked up)	tags, has_all_tags (是否注视着方块，未启用)
+	IsLookingAtEntity		(not hooked up	tags, has_all_tags (是否注视着实体，未启用)
+	IsStatAtMax				stat (Health,Food,Stamina,Water);  detects if a stat is within 0.1f UNITS of max, not %. (检查属性是否已满，在最大值的 0.1 单位内)
+	IsFPV					(是否为第一人称视角)
+	IsLocalPlayer			(是否为本地玩家)
+	IsAlly					checks to see if the player target is an ally (检查目标玩家是否为盟友)
+
+	<!-- 关于生命/耐力值的比较有点复杂。 -->
+	<!-- 你有 Max (最大值)，这是你生命值可能达到的绝对上限。 -->
+	<!-- 然后是 ModMax (修正最大值)，这是被重伤降低的“中间上限”。 -->
+	<!-- 最后是 Current (当前值)，这是你实际剩余的生命值。如果全部失去，你就会死亡。 -->
+	<!-- 所以，当前生命值可以增加到修正最大值。 -->
+	<!-- 如果你想让当前生命值增加到最大值，你需要先将修正最大值提高到最大值。 -->
+	<!-- 0 <-> 当前生命值 <-> 修正最大值 <-> 最大值 -->
+	<!-- 了解了这些，属性比较就不那么混乱了： -->
+	For stat comparisons Health/Stamina are a bit twisted.
+	You have Max which is the absolute ceiling value that your health can possibly reach.
+	Then you have ModMax which is the "middle ceiling" that is lowered by serious injuries.
+	Then you have Current which is the hit points you actually have remaining. You lose all of those, you die.
+
+	So Current HP can increase up to ModMax HP.
+	If you want Current HP to increase up to Max HP you need to increase ModMax HP to Max HP first.
+	0 <-> Current HP <-> ModMax HP <-> Max HP
+	Armed with that knowledge the stat comparisons are slightly less confusing:
+
+	StatCompareCurrent				target, stat(health,stamina,water), operation, value (比较当前值)
+	StatCompareMax					(比较最大值)
+	StatCompareModMax				(比较修正最大值)
+	StatComparePercCurrentToMax		(比较当前值与最大值的百分比)
+	StatComparePercCurrentToModMax	(比较当前值与修正最大值的百分比)
+	StatComparePercModMaxToMax		(比较修正最大值与最大值的百分比)
+
+			<requirement name="StatComparePercCurrentToMax" stat="health" operation="LTE" value=".8"/>
+
+
+	StatCompare: 			target, stat, operation, value		(deprecated? 已弃用?)
+	StatComparePercent:		target, stat, operation, value		(deprecated? 已弃用?)
+
+	<!-- 属性 / cvar 比较运算符: -->
+	Stat / cvar comparison operators:
+			None (无),
+			Equals (等于),
+			NotEquals (不等于),
+			Less, LessThan, LT (小于),
+			Greater, GreaterThan, GT (大于),
+			LessOrEqual, LessThanOrEqualTo, LTE (小于等于),
+			GreaterOrEqual, GreaterThanOrEqualTo, GTE (大于等于)
+
+	IsSecondaryAttack		(是否为次要攻击)
+	IsPrimaryAttack			(是否为主要攻击)
+
+	HasTrackedEntity		tags (entity tags).   This uses the "TrackDistance" passive for the distance check. (检查范围内是否有被追踪的带标签实体)
+							Is not actually connected to the AnimalTracking passive. It simply returns TRUE if a tagged entity is in range. (与 AnimalTracking 被动无关，只是检查范围内是否有带标签的实体)
+	IsDay					(是否为白天)
+	IsNight					(是否为夜晚)
+	IsBloodMoon				(是否为血月)
+	TimeOfDay				<requirement name="TimeOfDay" operation="GTE" value="1230"/> (一天中的时间)
+	InBiome biome="<biome id>"		<requirement name="InBiome" biome="9"/> (是否在特定生物群系)
+	IsIndoors				(是否在室内)
+
+	PerksUnlocked skill_name="<skill name>" (已解锁的专精)
+	PlayerItemCount item_name="<item name>" - An expensive function that should be used sparingly. (玩家物品数量 - 这是一个消耗性能的函数，应谨慎使用)
+	BlockStandingOn, check block tags like for "walking on snow" (检查脚下站立的方块标签)
+	HitLocation,		body_parts="Torso,Head,LeftUpperArm" (命中部位)
+					None,Head,Torso,LeftUpperArm,RightUpperArm,LeftLowerArm,RightLowerArm,LeftUpperLeg,RightUpperLeg,LeftLowerLeg,RightLowerLeg
+	BurstRoundCount		(连发次数)
+	TargetRange,	for the range between the attacking entity and the target. Intended to be used for firearms, specifically as the requirement for a buff to trigger on hit. (攻击者与目标之间的距离，主要用于枪械)
+				Not all triggers work with this. onSelfPrimaryActionRayHit did not, onSelfAttackedOther did. (并非所有触发器都支持此功能)
+	RoundsInMagazine	(弹匣内子弹数)
+	RecipeUnlocked		(配方是否解锁)
+	WornItems			(穿戴的物品)
+	EntityHasMovementTag (实体是否有移动标签)
+		running/walking/idle: only while on land (奔跑/行走/站立：仅在陆地)
+		floating/swimming: in water (漂浮/游泳：在水中)
+		driving: while driving a vehicle - does only work directly with  FoodChangeOT (驾驶：驾驶载具时 - 仅直接与 FoodChangeOT 配合使用)
+		jumping/climbing/crouching/standing/falling: don't seem to work (跳跃/攀爬/蹲伏/站立/下落：似乎无效)
+	TriggerHasTags, For now this is very specific to onSelfDestroyedBlock & onSelfDamagedBlock. Likely to be expanded later. (触发器有标签，目前仅用于 onSelfDestroyedBlock 和 onSelfDamagedBlock)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 需求 / 条件 / 标签 (REQUIREMENTS / CONDITIONS / TAGS) :
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 标签可用于将被动效果限制在特定的（命中）位置、状态或姿势。 -->
+Tags can be used to limit passive effects to certain (hit) locations, states, or stances.
+
+<!-- 移动/姿势: -->
+Movement/stance:
+crouching, standing, idle, walking, running, swimming, floating, jumping, falling, climbing
+	<passive_effect name="JumpStrength" operation="base_set" value="0.13"/>
+	<passive_effect name="JumpStrength" operation="base_set" value="0.15" tags="running"/>
+
+<!-- 命中位置 (见上文) -->
+Hit location (see below)
+
+<!-- 物品标签: -->
+Item tags:
+	<!-- 对于被动效果，你不能简单地检查正在使用的武器的标签。 -->
+	With passives you can not simply check the tags of the weapon you are using.
+	<!-- 这个写法是无效的。 -->
+	<passive_effect name="RoundsPerMinute" tags="perkGunslinger" operation="perc_add" value="2,2" level="1,5"/>
+	does not work.
+
+	<!-- 你需要使用需求来代替： -->
+	Instead you need to use
+	<requirement name="HoldingItemHasTags" tags="perkGunslinger"/>
+	<passive_effect name="RoundsPerMinute" operation="perc_add" value="2,2" level="1,5"/>
+
+<!-- invert_tag_check="true" -->
+<!-- 这将对所有不包含所列标签的物品/被动效果生效。 -->
+	This will pass all items/passives that do NOT have the listed tag.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 主动 / 触发效果 (ACTIVE / TRIGGERED EFFECTS) (不要与被动效果混淆!)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<triggered_effect trigger="onSelfBuffStart" action="Ragdoll" [other parameters depending on the action]/>
+
+<!-- 触发效果是原子操作，能立即改变一个值、启动一个 Buff 或播放一个声音。 -->
+<!-- 它们执行动作，但触发本身没有内在的持续时间。 -->
+Triggered effects are atomic operations that instantly change a value, start a buff, start a sound.
+They do stuff but the trigger itself has NO inherent duration.
+
+<!-- 触发效果可以检查目标标签 (TARGET TAGS)，但使用不同的表示法： -->
+Triggered effects can check TARGET TAGS but use a different notation:
+
+target_tags="walker,head"
+			<!-- 可用标签：animal,bear,coyote,dog,entity,feral,hostile,human,npc,player,radiated,turret,vehicle,vulture,walker,wolf,zombie, -->
+			<!-- 有 3 个特殊标签: ally, party, enemy -->
+			<!-- 这些标签可以让你将效果（如 AOE 效果）过滤到特定群体。 -->
+			animal,bear,coyote,dog,entity,feral,hostile,human,npc,player,radiated,turret,vehicle,vulture,walker,wolf,zombie,
+There are 3 special tags:   ally, party, enemy
+These let you filter an effect to a group of these like with an AOE effect.
+
+target_tags
+<!-- - 没有 match_all_tags (匹配所有标签) 属性 -->
+- DO NOT have a  match_all_tags
+<!-- - 不允许过滤命中位置 -->
+- DO NOT allow to filter for hit locations
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 游戏内事件 / 触发器列表 (MINEVENTS / LIST OF TRIGGERS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+onSelfBuffStart = 0 (当自身 Buff 开始时)
+onSelfBuffUpdate,  Frame-based, not 1/s (当自身 Buff 更新时，基于帧，非每秒)
+onSelfBuffFinish,  Runs when the duration of a buff has run out. (当自身 Buff 持续时间结束时)
+onSelfBuffRemove,  When the buff is being removed by any source. Cannot be used for a buff to restart itself. Called when targets die. (当自身 Buff 因任何原因被移除时。不能用于让 Buff 重启自身。目标死亡时调用)
+onSelfBuffStack    When the buff is refreshed/extended/stacked... anything but "ignore" (当自身 Buff 刷新/延长/叠加时)
+
+onSelfProgressionUpdate;  runs all such events in progression 1x per second (当自身进度更新时；每秒运行一次)
+onPerkLevelChanged;  fires when you BUY a perk, not when it is temporarily increased or lowered; this is intended and how passives work (当购买专精等级时触发，非临时增减)
+
+onCombatEntered (进入战斗时)
+
+onOtherDamagedSelf (当其他实体对自己造成伤害时)
+onOtherAttackedSelf		target="other" is the entity that last attacked you. Should NOT fire on every tick of a bleeding buff. (当其他实体攻击自己时，"other" 是攻击者。不应在流血 Buff 的每一跳都触发)
+						DOES NOT fire if damage comes from a buff (如果伤害来自 Buff，则不触发)
+onOtherHealedSelf (当其他实体治疗自己时)
+
+onSelfDamagedOther (当自己对其他实体造成伤害时)
+onSelfAttackedOther (当自己攻击其他实体时)
+onSelfHealedOther (当自己治疗其他实体时)
+onDismember (肢解时)
+
+onProjectileImpact; trigger for projectiles like arrows, molotovs, rockets (当抛射物（箭、燃烧瓶、火箭）命中时)
+
+onSelfDamagedSelf (当自己对自己造成伤害时)
+onSelfHealedSelf (当自己治疗自己时)
+onSelfKilledOther (当自己杀死其他实体时)
+
+onSelfDied (当自己死亡时)
+onOtherKilledSelf (当其他实体杀死自己时)
+onBlockKilledSelf (当方块杀死自己时)
+onSelfKilledSelf (当自己自杀时)
+
+onSelfPrimaryActionStart			works (当主要动作开始时，有效)
+onSelfPrimaryActionRayHit			works (当主要动作的射线命中时，有效)
+onSelfPrimaryActionEnd				also fires on releasing a spear throw (当主要动作结束时，也包括释放投矛)
+onSelfPrimaryActionUpdate			fires constantly (当主要动作持续更新时，持续触发)
+onSelfPrimaryActionAttackFinished	n/a? (当主要动作攻击完成时，未知)
+onSelfPrimaryActionRayMiss			attack has not hit an entity and has not hit a block (当主要动作的射线未命中实体也未命中方块时)
+
+onSelfPrimaryActionGrazeHit (当主要动作擦伤命中时)
+onSelfPrimaryActionGrazeMiss		attack has not hit an entity and has not hit a block (当主要动作擦伤未命中时)
+onSelfPrimaryActionMissEntity		attack did not hit an entity. (当主要动作未命中实体时)
+
+onSelfRangedBurstShot				on shots that are fired while holding the trigger down, between ActionStart and AttackFinished. (在按住扳机连发时触发)
+
+onSelfSecondaryActionStart			works (当次要动作开始时，有效)
+onSelfSecondaryActionRayHit			works (当次要动作的射线命中时，有效)
+onSelfSecondaryActionEnd			also fires on releasing a spear throw (当次要动作结束时，也包括释放投矛)
+onSelfSecondaryActionUpdate			fires constantly (当次要动作持续更新时，持续触发)
+onSelfSecondaryActionAttackFinished	n/a? (当次要动作攻击完成时，未知)
+onSelfSecondaryActionRayMiss		attack has not hit an entity and has not hit a block (当次要动作的射线未命中时)
+
+onSelfSecondaryActionGrazeHit (当次要动作擦伤命中时)
+onSelfSecondaryActionGrazeMiss		attack has not hit an entity and has not hit a block (当次要动作擦伤未命中时)
+
+onSelfSecondaryActionMissEntity		attack did not hit an entity (当次要动作未命中实体时)
+
+onSelfExplosionAttackedOther (当自身爆炸攻击到其他实体时)
+onSelfExplosionDamagedOther (当自身爆炸伤害到其他实体时)
+onSelfExplosionMissEntity			explosive did not hit an entity. (当自身爆炸未命中实体时)
+
+onSelfRepairBlock (当自己修复方块时)
+onSelfPlaceBlock (当自己放置方块时)
+onSelfUpgradedBlock (当自己升级方块时)
+onSelfDamagedBlock,		can use tags via the TriggerHasTags requirement (当自己对方块造成伤害时，可使用标签)
+onSelfDestroyedBlock,	can use tags via the TriggerHasTags requirement (当自己摧毁方块时，可使用标签)
+onSelfHarvestBlock (当自己采集方块时)
+onSelfHarvestOther (当自己采集其他实体时)
+
+onOtherEnteredRange, //Hook Up (当其他实体进入范围时，待实现)
+onOtherLeftRange, //Hook Up (当其他实体离开范围时，待实现)
+
+onSelfEquipStart ; can only work on an item/mod (当自己开始装备时；仅能在物品/模组上工作)
+onSelfEquipStop (当自己停止装备时)
+onSelfItemActivate ; can only work on an item/mod (当自己激活物品时；仅能在物品/模组上工作)
+onSelfItemDeactivate (当自己停用物品时)
+
+onReloadStart (当开始装弹时)
+onReloadUpdate (当装弹进行中)
+onReloadStop (当停止装弹时)
+
+onSelfFirstSpawn	not working? (当自己首次出生时，无效？)
+onSelfRespawn,		on respawn after death (当自己死亡后重生时)
+onSelfLeaveGame	working? (当自己离开游戏时，有效？)
+onSelfEnteredGame,	every time you load into the game, including the first time (每次载入游戏时，包括首次)
+onSelfTeleported (当自己传送时)
+
+onSelfJump (当自己跳跃时)
+onSelfLandJump (当自己跳跃落地时)
+onSelfFallImpact (当自己摔落冲击时)
+onSelfRun (当自己开始奔跑时)
+onSelfWalk,		//triggers once on starting to walk (当自己开始行走时，触发一次)
+onSelfCrouch (当自己蹲下时)
+onSelfStand (当自己站起时)
+onSelfAimingGunStart (当自己开始瞄准时)
+onSelfAimingGunStop (当自己停止瞄准时)
+onSelfCrouchRun (当自己蹲伏奔跑时)
+onSelfCrouchWalk (当自己蹲伏行走时)
+onSelfSwimStart,	entering/leaving water (当自己开始游泳时，进入/离开水)
+onSelfSwimStop (当自己停止游泳时)
+onSelfWaterSubmerge		diving below / above the water surface, when the water screen effect changes (当自己潜入/浮出水面时)
+onSelfWaterSurface (当自己浮出水面时)
+onSelfSwimRun (当自己游泳冲刺时)
+onSelfSwimIdle (当自己游泳静止时)
+
+onSelfHoldingItemCreated	;when you equip a belt item in the active slot? (当创建手持物品时；装备腰带物品到活动槽位？)
+onSelfHoldingItemThrown (当投掷手持物品时)
+onSelfItemCrafted, //Hook Up (当自己制作物品时，待实现)
+onSelfItemRepaired, //Hook Up (当自己修理物品时，待实现)
+onSelfItemLooted, //Hook Up (当自己搜刮到物品时，待实现)
+onSelfItemLost, //Hook Up (当自己失去物品时，待实现)
+onSelfItemGained, //Hook Up (当自己获得物品时，待实现)
+onSelfItemSold, //Hook Up (当自己出售物品时，待实现)
+onSelfItemBought, //Hook Up (当自己购买物品时，待实现)
+
+//onSelfDiscoveredPOI, //Hook Up (当自己发现兴趣点时，待实现)
+//onSelfDiscoveredArea, //Hook Up (当自己发现区域时，待实现)
+
+//onSelfEnteredPOI, //Hook Up (当自己进入兴趣点时，待实现)
+//onSelfExitedPOI, //Hook Up (当自己离开兴趣点时，待实现)
+
+//onSelfEnteredArea, //Hook Up (当自己进入区域时，待实现)
+//onSelfExitedArea, //Hook Up (当自己离开区域时，待实现)
+
+onSelfEnteredBiome (当自己进入生物群系时)
+
+onSelfLootContainer (当自己搜刮容器时)
+onSelfOpenLootContainer (当自己打开容器时)
+onSelfCloseLootContainer (当自己关闭容器时)
+
+//onQuestStart, //Hook Up (当任务开始时，待实现)
+//onQuestLocationReached, //Hook Up (当到达任务地点时，待实现)
+//onQuestLocationLeft, //Hook Up (当离开任务地点时，待实现)
+//onQuestCompleted, //Hook Up (当完成任务时，待实现)
+//onQuestFailed, //Hook Up (当任务失败时，待实现)
+
+//onGameBloodmoonStart, //Hook Up (当血月开始时，待实现)
+//onGameBloodmoonEnd, //Hook Up (当血月结束时，待实现)
+//onGameDayStart, //Hook Up (当白天开始时，待实现)
+//onGameNightStart, //Hook Up (当夜晚开始时，待实现)
+//onGameRainStart, //Hook Up (当开始下雨时，待实现)
+//onGameRainEnd, //Hook Up (当雨停时，待实现)
+//onGameSnowStart, //Hook Up (当开始下雪时，待实现)
+//onGameSnowEnd, //Hook Up (当雪停时，待实现)
+//onGameFogStart, //Hook Up (当起雾时，待实现)
+//onGameFogEnd, //Hook Up (当雾散时，待实现)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 主动 / 触发效果：动作 (ACTIVE / TRIGGERED EFFECTS: ACTIONS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- <triggered_effect/> 的 TARGET 参数支持 [self, other, selfAOE, otherAOE, positionAOE, selfOtherPlayers] -->
+<!-- 只有在特定动作支持时才可使用 AOE。如果 AOE 事件有需求，将对所有目标检查此需求，只有满足所有需求的目标才有效。 -->
+<!-- target="self" 是默认值，可以覆盖为 target="other" 以检查（攻击的？）目标。 -->
+<!-- 对于被攻击等事件触发器，"other" 是你的攻击者。 -->
+TARGET parameter for <triggered_effect/> supports [self, other, selfAOE, otherAOE, positionAOE, selfOtherPlayers]
+	AOE only if the specific action supports it. If an AOE event has a requirement, this req will be checked
+	for all targets and only those who meet all req will be valid targets.
+		target="self" is the default and can be overridden with target="other" if you want to check on the target of (an attack?)
+		For event triggers like being attacked, "other" is your attacker.
+
+<!-- 根据使用的 TARGET 或 TRIGGER，可能需要 range 参数： -->
+Depending on what TARGET or TRIGGER is used, it may require a range parameter:
+range="x"
+
+AnimatorSetFloat:		target, property, value (设置动画器浮点数)
+AnimatorSetInt:		target, property, value ; change the animation / walk type (设置动画器整数；改变动画/行走类型)
+AnimatorSetBool:		target, property, value (设置动画器布尔值)
+AddBuff:				target, buff   - this default mode adds 1 buff. It can fail (be resisted) if a BuffResistance is active. (添加 Buff - 默认添加 1 个 Buff。如果 BuffResistance 激活，可能会被抵抗)
+
+					<!-- 多 Buff 选择： -->
+					Multi buff selection:
+					<triggered_effect trigger="onSelfBuffStart" action="AddBuff"
+					fireOneBuff="true" buff="bufftest01,bufftest02,bufftest03,bufftest04,bufftest05" weights="5,4,3,2,1"/>
+					<!-- 这会根据权重从列表中选择一个 Buff 触发。 -->
+					<!-- 概率分别为 33%, 26%, 20%, 13%, 6%。 -->
+					This fires ONE buff, choosing one from the list based on the weights.
+					33, 26, 20, 13, and 6 percent chance on those.
+
+					<!-- fireOneBuff="true" 意味着它不会触发所有 Buff，而是使用权重。 -->
+					<!-- 如果 fireOneBuff="false"，它会根据 0-1 的随机掷骰和权重值尝试触发每个 Buff，所以你可以用一个动作触发多个潜在的 Buff。 -->
+					<!-- 在这种情况下，权重应在 0-1 之间，代表该 Buff 被添加的概率。 -->
+					fireOneBuff="true" obviously means that it does NOT fire them all and uses weights instead.
+					If fireOneBuff="false" it will try to fire each of them based on rolling 0-1 and the weight value so you can fire multiple potential buffs with one action.
+					If this is the case, the weights should be between 0-1, representing the probability for that buff to be added.
+
+					<!-- 如果没有权重也没有 fireOneBuff，它会简单地触发列表中的所有 Buff。 -->
+					With no weights and no fireOneBuff it will simply proc all buffs in the list.
+
+RemoveBuff:			target, buff (移除 Buff)
+ModifyCVar:			target, cvar, operation[set,add,subtract,multiply,divide,percentadd,percentsubtract], value (修改 cvar)
+						value="randomfloat(1,10)" /  value="randomint(1,10)"  this generates a random number to be used in the cvar manipulation. (生成随机数用于 cvar 操作)
+					<!-- 执行 "cvar" "operation" "value" 的基本数学运算，并将结果写回 "cvar"。 -->
+					Perform a basic math operation of   "cvar" "operation" "value"
+					and write the result back to  "cvar"
+CVarLogValue:			target, cvar   (print a debug message to the console) (在控制台打印 cvar 的值)
+RemoveCVar:			target, cvar (cvar can be a comma delimited list) (移除 cvar，可以是逗号分隔的列表)
+					Removes a comma delimited list of cvars. (Same as setting to 0) (移除逗号分隔的 cvar 列表，等同于设置为 0)
+LogMessage:			message (记录消息)
+ModifyScreenEffect:		target, effect_name, intensity, fade;   intensity=0 disables it (修改屏幕效果；intensity=0 禁用)
+					<!-- 着色器在 \Assets\Resources\ScreenEffects\Shaders -->
+					Shaders are in \Assets\Resources\ScreenEffects\Shaders
+PlaySound:			target, sound, play_in_head;   sound references not a file name but a sound name from sounds.xml (播放声音；sound 引用 sounds.xml 中的声音名)
+					<!-- sound 可以使用通配符。"#" 会被替换为 "1" (男性) 或 "2" (女性)，"$" 会被替换为 "Male" 或 "female"。 -->
+					sound can use wildcards. "#" is replaced by "1" (male) or "2" (female), "$" is replaced by "Male" or "female"
+						example: sound="player#painlg"
+StopSound:			target, sound, play_in_head (停止声音)
+FadeOutSound:			target, sound (淡出声音)
+ShakeCamera			shake_speed,shake_amplitude,shake_time? (震动镜头)
+ModifyStat:			deprecated  (does not support value_type) (修改属性，已弃用)
+ModifyStats:			target, stat[health,stamina,water,coretemp   food?], (修改多个属性)
+					value_type [max,modifiedmax],
+					operation[set,setvalue,add,subtract,multiply,divide,randomfloat ?,randomint ?], value,
+
+						<!-- 注意，这里的运算符与被动效果的不同。 -->
+						Note that the operators are DIFFERENT from the ones on passive effects.
+					<!-- 执行 "stat" "operation" "value" 的基本数学运算，并将结果写回 "stat"。 -->
+					Perform a basic math operation of   "stat" "operation" "value"
+					and write the result back to  "stat"
+Ragdoll:				target, duration, force (can increase the push force) (布娃娃效果)
+ShowToolbeltMessage		target?, message="blahblub" | message_key="localizationKey",  sound=""   play_in_head is always true for this. (显示工具腰带消息)
+					<!-- 此消息出现前会有 1+ 秒的延迟。开发者说这是故意的。我怀疑是有幽灵消息堵塞了队列。 -->
+					There will be a 1+ second delay before this message appears. The coder said that this is intentional. I suspect that there are ghost messages clogging the queue.
+
+AttachParticleEffectToEntity		target, particle, parent_transform, local_offset, local_rotation (将粒子效果附加到实体)
+RemoveParticleEffectFromEntity	target, particle (从实体移除粒子效果)
+
+ResetProgression		hardcoded to ignore book perks (重置进度，硬编码忽略书籍专精)
+GiveExp				exp="@_expdeficit" | exp="0" (给予经验值)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 被动效果 (PASSIVE EFFECTS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 每个被动效果本质上都是一个数字。它反映了一个实体的当前状态，比如它的最大承载能力或枪的向上后坐力。 -->
+Every passive effect essentially IS a number. It reflects a CURRENT STATE of an entity, like it's maximum carrying capacity or the upwards recoil of a gun.
+
+<!-- 所有应用的变化都是永久的... 直到下一次更新运行整个操作顺序 (OOO) 并为相关效果确定一个新的当前值。 -->
+All applied changes are permanent... until the next update runs the entire Order Of Operation (OOO) and determines a NEW current value for the effect in question.
+
+<!-- 穿戴的物品在穿戴时应用其效果。 -->
+Worn items apply their effects while being worn.
+<!-- 手持物品（工具）在手持时（在活动工具腰带槽中）应用其效果。 -->
+Hand items (tools) apply their effects while being held, being in the active tool belt slot.
+<!-- Buff 在激活时应用其效果。 -->
+Buffs apply their effects while being active.
+<!-- 所有这些效果都可以完全或部分地依赖于条件，所以如果你有一个特殊的再生 Buff，它会持续... 但当你同时有“燃烧” Buff 时，它的治疗效果可能会暂时中断。 -->
+All of these effects can fully or partially depend on conditions so if you have a special regen buff it would
+	keep going... but it's healing effect could temporarily drop out WHILE you ALSO have a "burning" buff on you.
+
+<!-- 这个系统做的所有事就是修改数字。如果你想启动一个 Buff - 你来错地方了。 -->
+<!-- 如果你想改变每次跳跃消耗多少耐力 - 这正是我们做的事。 -->
+Modifying numbers is all this system does. If you want a buff started - you're in the wrong place.
+If you want to change how much stamina each jump uses - that's what we do here.
+
+<!-- 所有被动效果都隐含 target="self"。 -->
+target="self" is implied with all passive effects.
+<!-- 你不能对 target="other" 应用效果，因为它没有持续时间，并且会在下一次更新时被覆盖。 -->
+<!-- 当然，可以对另一个实体应用一个 Buff。该 Buff 随后成为该实体 OOO 的一部分，并应用其效果。 -->
+You cannot apply an effect to target="other" because it would not have a duration and be overridden on the next update.
+A buff can be applied to another entity, of course. That buff is then a part of this entity's OOO and the effects are applied.
+
+<!-- 关于 OOO 的更多信息，请参阅 XML.txt 中关于确定效果及其量级的通用计算顺序，即操作顺序 (OOO)。 -->
+For more information on OOO, see
+XML.txt, GENERAL computational order for determining effects and their magnitude, order of operations (OOO)
+
+<!-- 特殊情况 (SPECIAL CASES) -->
+
+<!-- 物品 (ITEMS) -->
+
+<!-- 物品可以有等级 (tiers)。 -->
+Items can have tiers.
+
+<passive_effect name="RunSpeed" operation="perc_add" value="5" tier="1"/>
+<passive_effect name="RunSpeed" operation="perc_add" value="10,50" tier="2,6"/>
+<!-- tier 参数将效果限制在特定等级或等级范围内。 -->
+<!-- 以上两者可以作为同一物品的一部分。 -->
+The tier parameter limits an effect to a specific tier or range of tiers.
+Both of the above can be part of the same item.
+
+<!-- 进度 (PROGRESSION) (属性、技能、专精) -->
+PROGRESSION  (attributes,skills,perks)
+
+<!-- 这里的东西有“等级 (level)”。你可以限制某个效果... 见上文。 -->
+Stuff has a "level" here. You can limit a certain effect... see above.
+
+<passive_effect name="RunSpeed" operation="perc_add" value="5" level="1"/>
+<passive_effect name="RunSpeed" operation="perc_add" value="10,50" level="2,6"/>
+
+<!-- BUFFS -->
+
+<!-- 你可能已经发现 Buff 有持续时间。 -->
+<!-- 默认情况下，所有包含的效果在 Buff 激活期间都“开启”。 -->
+You have probably figured out that buffs have a duration.
+The default case is that all included effects are "on" while the buff is.
+
+<!-- 这太简单了，所以让我们来点有趣的，模拟效果曲线！ -->
+This would be way too simple so let's have some fun and model effect CURVES!
+
+<!-- duration 是被动效果的可选参数。 -->
+<!-- Buff 的持续时间值 0 是 Buff 开始的时候。 -->
+duration  is an optional parameter of passive effects.
+A buff's duration value 0 is when the buff is started.
+
+<passive_effect name="SpreadMultiplierAiming" operation="perc_add" duration="2,4,8.5" value="0,-20,-85"/>
+<!-- 这个效果在 Buff 的前 2 秒内不起作用。 -->
+<!-- 在 Buff 时间的 2 秒到 4 秒之间，它将 SpreadMultiplierAiming 从正常值移动到 -20%。 -->
+<!-- 在 Buff 时间的 4 秒到 8.5 秒之间，它将 SpreadMultiplierAiming 从 -20% 移动到 -85%。 -->
+<!-- 8.5 秒后，没有效果。 -->
+This effect does nothing for the first 2 seconds of the buff.
+Between 2s and 4s of buff time it moves  SpreadMultiplierAiming from normal to -20%.
+Between 4s and 8.5s of buff time it moves  SpreadMultiplierAiming from -20% to -85%.
+After 8.5s there is no effect.
+
+<passive_effect name="SpreadMultiplierAiming" operation="perc_add" duration="8.50001,600" value="-85"/>
+<!-- 这个效果在 8.50001 秒时生效，并始终应用相同的效果。 -->
+<!-- (你可以把它整合到之前的效果曲线中 - 这里只是一个演示) -->
+This effect kicks in at 8.50001s and always applies the same effect.
+(you would roll that into the previous effect curve - this here is just a demonstration)
+
+<!-- 随机线性插值 (RANDOM LERP) -->
+
+<!-- 如果任何 物品/进度/Buff 的被动效果没有 tier/level/duration，但有两个值 -->
+If any ITEMS/PROGRESSION/BUFFS passive effect has NO tier/level/duration but DOES have TWO values
+<!-- 比如 value="3,10"，这将被视为一个随机范围。 -->
+as in value="3,10" then this will be considered a random range.
+
+<!-- 注意：在内部，tier|level|duration 是相同的值。它的含义由上下文决定，所以一个技能可以像一个物品一样工作，如果... 但现在让我们保持理智。 -->
+Note: Internally, tier|level|duration is the same value. It's meaning is derived from the context so a skill would work like an item if... but let's keep our sanity for now.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 被动效果：操作 (PASSIVE EFFECTS : OPERATIONS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 被动效果总有一个操作。 -->
+<!-- 你还记得它们做的所有事就是改变数字吗？所以它们必须有一个操作。 -->
+Passive effects always have an operation.
+You DO remember that changing numbers is all they do? So they must have an operation.
+
+<!-- 注意，这些不是“运算符”，而是 OOO 过程中执行的更复杂的操作。 -->
+<!-- 这些操作与更简单的 ModifyCVar / ModifyStats 操作完全不同。 -->
+Note that these are not "operators" but rather more complex operations performed over the course of the OOO.
+These operations are completely different from the simpler  ModifyCVar / ModifyStats  operations.
+
+<passive_effect name="RunSpeed" operation="base_set|base_add|base_subtractperc_set|perc_add|perc_subtract" value="5"/>
+
+<!-- 操作 (OPERATION): -->
+<!-- base_set: 设置一个属性的绝对（基础）值，例如将 HealthMax 设置为正好 100。明智的做法是确保你只有一个这样的 "base_set"，因为它是一个无条件的覆盖。基础/默认值为 "1"。 -->
+base_set:			SET the absolute (base) value of a stat, such as setting HealthMax to exactly 100.
+				The smart thing to do would be to make sure you only ever have one such "base_set" because it's an unconditional overwrite.
+				The base / default value is "1".
+<!-- base_add: 一个值为 10 的话，会给绝对值增加 10 点。 -->
+base_add:			a value of 10 adds 10 points to the absolute value
+<!-- base_subtract: (你猜) 从绝对值减去。 -->
+base_subtract:		(guess)
+
+<!-- perc_set: 将一个效果的百分比修饰符设置为特定值。可能不常用，因为它会覆盖很多正在发生的事情。 -->
+perc_set:			set the % modifiers of an effect to a specific value. Likely not used very often because it overwrites a lot of what's going on.
+<!-- perc_add: 将此百分比修饰符添加到效果中。值为 ".07" 表示 +7%。所有效果的百分比修饰符都会累积起来，在所有基础值变化应用之后一次性应用。见 OOO。 -->
+perc_add:			add this % mofifier to an effect
+				A value of ".07" means +7%
+				All percentage modifiers for an effect are cumulated and applied ONCE after all base value changes have been applied.
+				See OOO. You will see this material again.
+<!-- perc_subtract: (同上，但为减法) -->
+perc_subtract:      (as above but not)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 被动效果：标签 (PASSIVE EFFECT : TAGS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 标签是一个过滤器，用于决定哪些效果应用于物品或实体。 -->
+Tags are a filter for which effects are APPLIED to an item or entity.
+
+<perk name="Pistols" parent="attPerception" name_key="perkPistols" description_key="perkPistolsDesc" icon="ui_game_symbol_pistol">
+	<passive_effect name="EntityDamage" operation="perc_add" level="0,10" value="0,100" tags="pistol"/>
+
+<item id="48" name="gunMGT1AK47">
+	<property name="Tags" value="weapon,ranged,gun,rifle,barrelAttachments"/>
+
+<item id="42" name="gunHandgunT2Magnum44">
+	<property name="Tags" tags="secondary,revolver"/>
+
+<!-- 这里我们有一个专精，假设在 10 级时，意味着使用带有 "pistol" 标签的物品时伤害 +100%。 -->
+Here we have one perk, say at level 10 which means +100% damage when using things tagged with "pistol".
+
+<!-- 在 OOO 中，技能在物品之后计算。 -->
+<!-- 专精现在检查其所有标签是否存在于物品的标签中。 -->
+<!-- 对于马格南手枪，有一个 "pistol" 标签，所以它有效。AK47 上没有，所以效果（伤害增加）不适用。 -->
+In the OOO skills come after items.
+The perk now checks if ALL OF ITS TAGS are present in the tags of the item.
+With the magnum there is a "pistol" tag so that works. On the AK47 there is none so the effect (damage increase) does not apply.
+
+<!-- 如果专精有 tags="pistol,longRange"，那么马格南就不符合条件。 -->
+<!-- 所有标签都必须匹配。 -->
+<!-- 物品可以有与其它专精/Buff 相关的额外标签，但每个专精都会检查其所有标签是否存在于物品上。 -->
+If the perk had tags="pistol,longRange" then the magnum would NOT qualify.
+All tags must be a match.
+Items can have additional tags that are relevant to other perks/buffs but each perk checks for ALL of it's tags being present on the item.
+
+<!-- 如果一个效果没有标签，它将应用于所有物品/攻击。 -->
+<!-- 标签用于将效果限制在非常特定的物品上，所以默认是“无限制”。 -->
+If an effect has NO tags it will be applied to all items/attacks.
+Tags are for LIMITING an effect to very specific items so the default is "no limitation".
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 特殊情况：衣物和护甲 (SPECIAL CASE: CLOTHING AND ARMOR)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 如果一个物品被标记为 "clothing" 或 "armor"，这也被解读为 "ignoreWhenHeld" (在工具腰带上时忽略)。 -->
+If an item is tagged "clothing" or "armor" this is also read as "ignoreWhenHeld" (on the tool belt)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 主要/次要动作标签 (PRIMARY / SECONDARY ACTION TAGS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 主要/次要动作被硬编码为向物品的标签添加 "primary" 或 "secondary"。 -->
+The primary / secondary actions are hard coded to add "primary" or "secondary" to an item's tags.
+
+<!-- 所以，如果我想要一个 Buff 或技能对所有左轮手枪的次要攻击施加效果，我会使用： -->
+So if I want a buff or skill to put an effect on the SECONDARY attack of all REVOLVERS, I would use
+	<passive_effect name="EntityDamage" operation="perc_add" value="100" tags="secondary,revolver"/>
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 被动效果列表 (LIST OF PASSIVE EFFECTS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 被动效果在哪个物品/实体上激活并不重要。只有少数效果需要特定的作用域，比如在物品或模组上。 -->
+It does not matter on which item/entity a passive is active. Only a few *require* a certain scope, like being on an item or mod
+
+<!-- 实体的典型属性/效果。你跳多高，跑多快，你的战利品等级/能力是什么... -->
+<!-- 这些（当我完成时）在 entityclasses.xml 中声明。 -->
+<!-- 然后它们被 Buff、专精、物品等修改。 -->
+Typical stats/effects of an entity. How high you jump, how fast you run, what your loot tier/ability is...
+These are (as I get around to it) declared in entityclasses.xml.
+Then they are ALTERED by buffs, perks, items and whatnot.
+
+EntityHeal, //Hook Up (实体治疗，待实现)
+BlockRepairAmount, //Hook Up (方块修复量，待实现)
+DamageModifier,	Head,Glass,Stone,Cloth,Concrete,Boulder,Metal,Wood,Earth,Snow,Plants,Leaves (伤害修正，用于爆头或材质差异)
+				<!-- 用于爆头乘数；这将伤害乘以 x。如果你 base_set 为 100，实体伤害将是固定的 100。 -->
+				<!-- 这是在确定攻击的基础伤害和 perc_add 之后应用的乘数，所以是真正的指数乘数。 -->
+				<!-- base_add/perc_add 在这里照常工作。电锯上的“木材”加成 10 + WoodSplitter 模组的 0.5 = 10.5 -->
+				used for headshot multiplier;  this multiplies damage by x, used for headshots or material differences. If you base_set it to a flat 100, entity damage will be 100 flat.
+				This is a multiplier that is applied AFTER base damage and perc_add for an attack have been determined so it is a true exponential multiplier.
+				base_add/perc_add work as usual here.  A "wood" bonus of 10 on the chainsaw +0.5 from a WoodSplitter mod = 10.5
+
+
+PhysicalDamageResist;  <!-- 物理伤害抗性；值为 0-100；100 意味着无敌 -->
+					<!-- 伤害类型的标签: "piercing,bashing,slashing,crushing,none,corrosive" -->
+					<!-- tags="coredamageresist" 的效果在护甲和耐久度值之后计算。 -->
+					<!-- 这些不受为物品标记的护甲技能影响。 -->
+					<!-- 如果平衡搞砸了，你可能会变得无敌。 -->
+					<!-- 另外：“coredamageresist”没有健全性检查。设为负值会增加你受到的伤害。 -->
+					a value of 0-100; 100 meaning invulnerable,
+					tags for damage types are"piercing,bashing,slashing,crushing,none,corrosive"
+					tags="coredamageresist" effects are calculated *after* the armor and degradation values.
+					These are not affected by the armor skills tagged for items.
+					You CAN become invulnerable if you screw up the balancing.
+					Also: There is no sanity check on "coredamageresist". Making it negative increases the damage you take from hits.
+ElementalDamageResist (元素伤害抗性)
+PhysicalDamageResistMax;	unused (最大物理伤害抗性；未使用)
+ElementalDamageResistMax;	unused (最大元素伤害抗性；未使用)
+
+TrapIncomingDamage		<!-- 仅限地雷，修改受到的伤害。perc_set=.8 减少 20%，但 base_set=90 将其设置为固定值 90。 -->
+						This is land mines only and modifies the damage that is taken.  perc_set=.8 reduces it by 20% but base_set=90 sets it to a flat value 90.
+BlockPickup		<passive_effect name="BlockPickup" operation="base_set" value="1" tags="Mine"/> (方块拾取)
+
+HypothermalResist - no longer used in V2.0 (低温抗性 - V2.0 不再使用)
+HyperthermalResist - no longer used in V2.0 (高温抗性 - V2.0 不再使用)
+
+//All vehicles (所有载具)
+VehicleFuelMaxPer, (最大燃料百分比)
+VehicleFuelUsePer, (燃料消耗百分比)
+VehicleMotorTorquePer, (马达扭矩百分比)
+VehicleVelocityMaxPer, (最大速度百分比)
+VehicleCarryCapacity, (载具容量)
+VehicleEntityDamage, (载具实体伤害)
+VehicleBlockDamage, (载具方块伤害)
+VehicleSelfDamage, (载具自身伤害)
+VehicleSeats, (载具座位数)
+
+//Gas vehicles (燃油载具)
+VehicleTankSize, (油箱大小)
+
+//Manual vehicles (人力载具)
+VehicleHopStrength, (跳跃力度)
+VehiclePlayerStaminaDrainRate, (玩家耐力消耗率)
+
+BatteryMaxLoadInVolts (电池最大伏特负载)
+BatteryDischargeTimeInMinutes (电池放电时间（分钟）)
+DistractionResistance (干扰抗性)
+DistractionRadius (干扰半径)
+DistractionLifetime (干扰持续时间)
+DistractionStrength (干扰强度)
+DistractionEatTicks (干扰消耗 Ticks)
+
+ProjectileVelocity (抛射物速度)
+ProjectileGravity (抛射物重力)
+ProjectileStickChance	default 0.5. Probably. <passive_effect name="ProjectileStickChance" operation="perc_set" value="0" tags="glass"/> (抛射物附着几率)
+
+RecipeTagUnlocked		<passive_effect name="RecipeTagUnlocked" tags="ammo44MagnumBulletHP,ammoShotgunSlug"/>, or set a cvar named "ammo44MagnumBulletHP" (解锁配方标签)
+
+EconomicValue (经济价值)
+
+AttributeLevel (属性等级)
+SkillLevel (技能等级)
+PerkLevel (专精等级)
+
+SkillExpGain (技能经验获取)
+PlayerExpGain,	Tags:	Kill, Harvesting, Upgrading, Crafting, Selling, Quest, Looting, Party, Other (玩家经验获取，标签：击杀、采集、升级、制作、出售、任务、搜刮、组队、其他)
+
+ExpDeficitPerDeathPercentage,	percentage is based on TotalExpNeeded for the next level. default is 10% per death (每次死亡经验惩罚百分比，基于升到下一级所需的总经验。默认为 10%)
+ExpDeficitMaxPercentage,		 default= 50% deficit,   also note: CVAR _expdeficit (最大经验惩罚百分比，默认为 50%)
+
+ElectricalTrapXP,	default=0, % of trap kill XP that the player gets. Works on specific block classes like "BladeTrap". Only tile entities can store an owner. (电陷阱经验，默认为 0，玩家获得的陷阱击杀经验百分比)
+
+NoiseMultiplier (噪音乘数)
+LightMultiplier (光照乘数)
+
+CraftingTime,	this passive can also be on a workstation-installable "tool". It then affects crafting time in that workstation. (制作时间，也可用于工作站工具)
+CraftingTier,	a _recipe_ can have a  tags="perkElectrocutioner".  Then a passive tagged with that will only affect recipes with this tag. (制作等级)
+CraftingSmeltTime, (熔炼时间)
+CraftingOutputCount, //Hook Up (制作产出数量，待实现)
+ActiveCraftingSlots, //Hook Up (活动制作槽位，待实现)
+CraftingSlots, //Hook Up (制作槽位，待实现)
+
+CarryCapacity,	the number of slots "unlocked" in the inventory (背包容量，解锁的物品栏格子数)
+BagSize,		the max number of slots on the UI (背包大小，UI 上的最大格子数)
+
+RepairTime, //Hook Up (修理时间，待实现)
+RepairAmount (修理量)
+
+WaterRegenRate,	multiplier for how fast stamina/health are regening (水分恢复率，耐力/生命恢复速度的乘数)
+
+HealthMax,	Total max hit points. (最大生命值)
+HealthMaxModifierOT,   changing the portion of "damaged" health up or down every 1s (随时间改变最大生命值修正值，每秒)
+HealthChangeOT,	Alter hit points by this much every 1second (随时间改变生命值，每秒)
+HealthGain,		when you gain health it's modified by this, generally for bonus healing or lowering heal amount (生命获取修正)
+HealthLoss,		whenever health is lost it's modified by this (生命损失修正)
+HealthLossMaxMult,	when hp is lost, this is the % of it to apply to healthMax as well (生命损失对最大生命值的影响百分比)
+
+StaminaMax (最大耐力值)
+StaminaMaxModifierOT,	USE THIS ONE instead of FoodChangeOT;  changing the portion of "damaged" health up or down  every 1s (随时间改变最大耐力值修正值)
+StaminaChangeOT (随时间改变耐力值)
+StaminaGain (耐力获取修正)
+StaminaLoss (耐力损失修正)
+StaminaLossMaxMult (耐力损失对最大耐力值的影响百分比)
+
+FoodMax,	food translates into the usable length of the stamina bar. (最大食物值，影响耐力条可用长度)
+FoodChangeOT (随时间改变食物值)
+FoodGain (食物获取修正)
+FoodLoss (食物损失修正)
+FoodLossPerHealthPointLost (每损失一点生命值所损失的食物)
+
+WaterMax,		water translates into how fast you can regen stamina / HP (最大水分值，影响耐力/生命恢复速度)
+WaterChangeOT (随时间改变水分值)
+WaterGain (水分获取修正)
+WaterLoss (水分损失修正)
+WaterLossPerHealthPointGained (每获得一点生命值所损失的水分)
+WaterLossPerStaminaPointGained (每获得一点耐力所损失的水分)
+
+HealthMaxBlockage,	How much of these stats is blocked / blacked out. This is to be caused by visible buffs to provide feedback. (最大生命值锁定，被 Buff 锁定的部分)
+StaminaMaxBlockage (最大耐力值锁定)
+FoodMaxBlockage (最大食物值锁定)
+WaterMaxBlockage (最大水分值锁定)
+
+
+CoreTempChangeOT, //Hook Up (核心体温随时间变化，待实现)
+CoreTempGain, //Hook Up (核心体温获取，待实现)
+CoreTempLoss, //Hook Up (核心体温损失，待实现)
+
+JumpStrength (跳跃力量)
+WalkSpeed (行走速度)
+RunSpeed (奔跑速度)
+CrouchSpeed (蹲伏速度)
+Mobility (移动能力)
+
+ScavengingTime (搜刮时间)
+ScavengingTier (搜刮等级)
+ScavengingItemCount,	//Hook Up (搜刮物品数量，待实现)
+HarvestCount;			this is a multiplier for harvest. Default= 0 ! (采集数量；这是采集的乘数，默认为 0！)
+ScrappingTime, (分解时间)
+
+DismemberChance, ; decapitation, 0-1;  tags are "head,arm,leg" (肢解几率；0-1；标签为 "head,arm,leg")
+	<property name="DismemberMultiplierHead" value="1"/> <!-- 这些僵尸属性会乘以设定的肢解几率 -->
+	<property name="DismemberMultiplierArms" value="1"/>
+	<property name="DismemberMultiplierLegs" value="1"/>
+
+TreasureRadius,		default=9 (宝藏半径，默认为 9)
+TreasureBlocksPerReduction,	When doing a treasure quest then for every TreasureBlocksPerReduction blocks dug up, the radius shrinks by 1m. (每挖掉多少方块宝藏半径减 1 米)
+
+BreathHoldDuration,		//Hook Up (屏息持续时间，待实现)
+
+BarteringBuying (交易购买价格修正)
+BarteringSelling (交易出售价格修正)
+SecretStash (秘密宝藏)
+LootTier, //Hook Up (战利品等级，待实现)
+HeatGain, //Hook Up (热量获取，待实现)
+
+QuestBonusItemReward (任务额外物品奖励)
+QuestRewardOptionCount (任务奖励选项数量)
+QuestRewardChoiceCount (任务奖励选择数量)
+
+GameStage (游戏阶段)
+LootStage,			LootStage only counts for containers that you open. It does not affect party loot GS. (战利品阶段，只对你打开的容器有效，不影响队伍战利品的游戏阶段)
+
+LandMineImmunity (地雷免疫)
+MovementFactorMultiplier,	Would be used to mitigate the movement slowdown that certain blocks apply. (移动系数乘数，用于减轻某些方块的减速效果)
+TrackDistance (追踪距离)
+TurretWakeUp (炮塔唤醒)
+TrapDoorTriggerDelay (陷阱门触发延迟)
+LandMineTriggerDelay (地雷触发延迟)
+
+LockPickTime - Used to reduce the time it takes to lock pick (开锁时间 - 用于减少开锁所需时间)
+LockPickBreakChance - Percent chance to reduce the lock pick breaking chance (开锁工具损坏几率 - 减少开锁工具损坏的百分比几率)
+
+LandClaimDamageModifier - damage done to blocks in land claim areas (领地石内方块伤害修正)
+	<!-- a基础值在 serverconfig.xml 中设置 -->
+	the base value for this is:		serverconfig.xml / LandClaimOnlineDurabilityModifier / LandClaimOfflineDurabilityModifier
+
+FallDamageReduction - Reduces damage taken from falling. Takes the cvar _fallSpeed as the base value. You can then affect it with a base_add, set, or perc_add before it enters the buff system. (摔落伤害减免)
+
+LootDropProb,		Takes an entities LootDropProb *property* as the base value. You can then affect it with a base_add, set, or perc_add. (战利品掉落概率)
+LootQuantity (战利品数量)
+
+
+CriticalChance (暴击几率)
+BuffProcChance (Buff 触发几率)
+BuffResistance;  tags references a buff name, at .4 on  "buffInjuryConcussion,buffBurning" you have a 40% chance for either buff to bounce instead of taking hold (Buff 抗性；标签引用 Buff 名称，例如 0.4 的抗性让你有 40% 几率抵抗该 Buff)
+BuffBlink			Enable blinking on the buff icons of buff IDs listed in the tag if value>=1 <passive_effect name="BuffBlink" operation="base_set" value="1" tags="critical01,critical02"/> (Buff 闪烁)
+
+DisableItem;	Set to 1 it disables all items that have a matching tag. (禁用物品；设置为 1 会禁用所有带匹配标签的物品)
+EntityDamage (实体伤害)
+DamageBonus,	A multiplier applied as a final calculation to scale damage vs specific body parts or materials. (伤害加成，最终计算中用于调整对特定身体部位或材质伤害的乘数)
+EntityHeal,		//Hook Up (实体治疗，待实现)
+BlockDamage,		BlockDamage now uses tags which can limit the damage to blocks specifically tagged for that - not just an entire material type. (方块伤害，现在使用标签来限制对特定标签方块的伤害)
+BlockRepairAmount, //Hook Up (方块修复量，待实现)
+
+AttacksPerMinute (每分钟攻击次数)
+SphereCastRadius (球形投射半径)
+
+SpreadMultiplierHip (腰射散布乘数)
+SpreadMultiplierAiming (瞄准散布乘数)
+SpreadMultiplierRunning (奔跑散布乘数)
+SpreadMultiplierWalking (行走散布乘数)
+SpreadMultiplierCrouching (蹲伏散布乘数)
+SpreadMultiplierIdle (站立散布乘数)
+
+IncrementalSpreadMultiplier (递增散布乘数)
+
+WeaponHandling, higher value is better (武器操控性，越高越好)
+
+MagazineSize (弹匣容量)
+ReloadSpeedMultiplier,	higher value is faster (装弹速度乘数，越高越快)
+
+DamageFalloffRange (伤害衰减距离)
+MaxRange,		guns only (最大射程，仅限枪械)
+BlockRange,		guns only	tools need to have a longer range for the block raycast for playability (方块作用距离，仅限枪械，工具需要更长的距离)
+SpreadDegreesVertical (垂直散布角度)
+SpreadDegreesHorizontal (水平散布角度)
+KickDegreesVerticalMin / KickDegreesVerticalMax (最小/最大垂直后坐力角度)
+KickDegreesHorizontalMin / KickDegreesHorizontalMax (最小/最大水平后坐力角度)
+
+
+JunkTurretActiveRange,	default=10,		can be on the item or the player (progression/buffs), not on the turret entity. (垃圾炮塔激活范围，默认为 10)
+JunkTurretActiveCount,	default=1,		this is bugged. A value of 0 means that 1 turret is active, 2 and 3 turrets will be active. (垃圾炮塔激活数量，默认为 1，有 bug)
+
+BurstRoundCount (连发子弹数)
+RoundsPerMinute,	guns only (每分钟射速，仅限枪械)
+ExplosionRadius (爆炸半径)
+RoundRayCount,		now an ammo property (射线数量，现在是弹药属性)
+SphereCastRadius,	guns only  - eventually for melee weapons (球形投射半径，仅限枪械，最终可能用于近战武器)
+
+LightIntensity,		the light level (0-15) in the game world (光照强度，游戏世界中的光照等级 0-15)
+
+HealthSteal (生命偷取)
+
+GrazeDamageMultiplier (擦伤伤害乘数)
+GrazeStaminaMultiplier (擦伤耐力乘数)
+
+DegradationMax (最大耐久度)
+DegradationPerUse (每次使用耐久度损耗)
+
+Tier (等级)
+ModSlots (模组槽位)
+ModPowerBonus (模组能量加成)
+
+PiercingDamage,		//Hook Up (穿刺伤害，待实现)
+SlashingDamage,		//Hook Up (挥砍伤害，待实现)
+BashingDamage,		//Hook Up (钝击伤害，待实现)
+CrushingDamage,		//Hook Up (碾压伤害，待实现)
+ExplosiveDamage,	//Hook Up (爆炸伤害，待实现)
+HeatDamage,			//Hook Up (火焰伤害，待实现)
+ColdDamage,			//Hook Up (冰冷伤害，待实现)
+RadiationDamage,	//Hook Up (辐射伤害，待实现)
+CorrosiveDamage,	//Hook Up (腐蚀伤害，待实现)
+ElectricalDamage,	//Hook Up (闪电伤害，待实现)
+
+TargetArmor,		When hitting an entity, modify the target entity's armor by this value. See  ammo9mmBulletAP. (目标护甲，命中时修改目标护甲值)
+FallingBlockDamage (掉落方块伤害)
+SilenceBlockSteps,		Sneaking over trash makes no sound. (脚步静音，潜行时踩在垃圾上不发声)
+CraftingIngredientCount (制作材料数量)
+EntityPenetrationCount (实体穿透数量)
+BlockPenetrationFactor,	default=251; This many block hit points reduce EntityPenetrationCount by 1.  251 is just enough to penetrate 1 wood block or door. (方块穿透系数，默认为 251；这么多方块生命值会使实体穿透数量减 1)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 被动护甲效果列表 (LIST OF PASSIVE ARMOR EFFECTS)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+PiercingProtection (穿刺防护)
+SlashingProtection (挥砍防护)
+BashingProtection (钝击防护)
+CrushingProtection (碾压防护)
+ExplosiveProtection (爆炸防护)
+
+//Elemental Damage Types (元素伤害类型)
+HeatProtection (火焰防护)
+ColdProtection (冰冷防护)
+RadiationProtection (辐射防护)
+CorrosiveProtection (腐蚀防护)
+ElectricalProtection (闪电防护)
+
+//Internal Body Damage Types (probably more used in mods and on buffs than on armor) (内部身体伤害类型，可能更多用于模组和 Buff)
+SuffocationProtection (窒息防护)
+DiseaseProtection (疾病防护)
+InfectionProtection, //Hook Up (感染防护，待实现)
+StarvationProtection, //Hook Up (饥饿防护，待实现)
+DehydrationProtection, //Hook Up (脱水防护，待实现)
+FeverProtection, //Hook Up (发烧防护，待实现)
+
+//Environmental Damage Types (环境伤害类型)
+FallingProtection, //Hook Up (摔落防护，待实现)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 载具 (VEHICLE)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+VehicleDamagePassedToPlayer //Hook Up (传递给玩家的载具伤害，待实现)
+VehicleSteering (载具转向)
+VehicleMaxSteeringAngle (载具最大转向角)
+VehicleAcceleration (载具加速度)
+VehicleBraking (载具制动)
+VehiclePlayerStaminaDrainRate (玩家在载具上的耐力消耗率)
+VehicleMaxSpeed (载具最大速度)
+VehicleMetersPerLiter (每升燃料行驶米数)
+VehicleIdleSecondsPerLiter (每升燃料怠速秒数)
+VehicleNoise (载具噪音)
+VehicleTraction (载具牵引力)
+VehicleDrag (载具阻力)
+VehicleTankSize (载具油箱大小)
+VehicleStorageWidth (载具储物箱宽度)
+VehicleStorageHeight (载具储物箱高度)
+
+BatteryMaxLoadInVolts (电池最大伏特负载)
+BatteryDischargeTimeInMinutes (电池放电时间（分钟）)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### 伤害类型 (DAMAGE TYPES)
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<!-- 任何具有非空 <damage_type value=""/> 的 Buff 都会被 RemoveAllNegativeBuffs 动作移除。 -->
+<!-- 这也是 Buff 如何与玩家击杀/友军火力设置交互的方式。除非设置为 hostile，否则只有正面 Buff 会通过。 -->
+Any buff that has a  <damage_type value=""/>  that is not null will be taken out with the  RemoveAllNegativeBuffs  action.
+This is also how buffs interact with the player kill / friendly fire settings.  Only positive buffs will go through unless set to hostile.
+
+//Physical Damage Types (物理伤害类型)
+Piercing (穿刺)
+Slashing (挥砍)
+Bashing (钝击)
+Crushing (碾压)
+Corrosive (腐蚀)
+
+//Elemental Damage Types (元素伤害类型)
+Heat (火焰)
+Cold (冰冷)
+Radiation (辐射)
+Toxic (毒素)
+Electrical (闪电)
+
+//Systemic Damage Types (系统性伤害类型)
+Disease (疾病)
+Infection (感染)
+Starvation (饥饿)
+Dehydration (脱水)
+Falling (摔落)
+Suffocation (窒息)
+BloodLoss		: This damage type (bleeding) has a reduced (10%) change to trigger the damage response like speeding up the zombie on damage (失血：这种伤害类型（流血）触发伤害反应（如僵尸加速）的几率降低了 10%)
+Sprain (扭伤)
+Break (骨折)
+Stun (眩晕)
+Concuss (脑震荡)
+KnockOut (击晕)
+BlackOut (昏迷)
+KnockDown (击倒)
+-->
+
+<!-- critical hit buffs (暴击 Buffs):-->
+<!-- triggerInfection (触发感染) -->
+<!-- triggerAbrasion (触发擦伤) -->
+<!-- triggerSprainedLeg (触发腿部扭伤) -->
+<!-- triggerBrokenLeg (触发腿部骨折) -->
+<!-- triggerSprainedArm (触发手臂扭伤) -->
+<!-- triggerBrokenArm (触发手臂骨折) -->
+<!-- triggerFatigued (触发疲劳) -->
+<!-- triggerBleeding (触发流血) -->
+<!-- triggerLaceration (触发撕裂伤) -->
+<!-- triggerStun (触发眩晕) -->
+<!-- triggerConcussion (触发脑震荡) -->
+
+<!-- RGB			HEX			Color Name			Buff Example -->
+<!-- 132,0,155		84009b		Admin Purple (管理员紫)		god -->
+<!-- 255,128,0		ff8000		Warning Orange (警告橙)		buffInjuryAbrasion -->
+<!-- 255,0,0		ff0000		Warning Red (警告红)			buffInjuryBleeding -->
+<!-- 0,255,0		00ff00		Lime Green (酸橙绿)			buffPerkCharismaticNature -->
+<!-- 255,175,175	ffafaf		Twitch Buff Red (Twitch 红)		twitch_buffBlur -->
+<!-- 255,255,255	FFFFFF		White (白色)				buffLumberjackSetBonus -->
+<!-- 0,255,255		00ffff		Aqua (水绿色)				buffRogueBoots -->
+<!-- 255,255,0		ffff00		Yellow (黄色)				buffStatusArmorLow -->
+<!-- 150,100,50		966432		Brown (棕色)				buffBurnt_Storm -->
+<!-- 200,200,0		c8c800		Golden Yellow (金黄色)		buffDesert_Storm -->
+<!-- 100,255,100	64ff64		Mint Green (薄荷绿)			buffWasteland_Storm -->
+<!-- 0,128,0		008000		Green (绿色)				buffForest_Hazard -->
+<!-- 120,180,255	78b4ff		Light Blue (浅蓝)			buffBurnt_Hazard_Over -->
+<!-- 179,255,255	b3ffff		Very Light Blue (极浅蓝)		buffSnow_Storm -->
+<!-- 175,175,255	afafff		Twitch Buff Purple (Twitch 紫)	twitch_buffFast -->

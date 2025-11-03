@@ -1,0 +1,3 @@
+<anan>
+	<set xpath="/entity_classes/entity_class[@name='zombieTemplateMale']/property[@name='TimeStayAfterDeath']/@value">1</set>
+</anan>

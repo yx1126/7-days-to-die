@@ -1,0 +1,13 @@
+<anan>
+  
+	<!-- 腰带 -->
+	<append xpath="/styles">
+		<style name="anTBSlots">
+			<style_entry name="color" value="[green]" />
+			<style_entry name="depth" value="9" />
+			<style_entry name="size" value="22,24" />
+			<style_entry name="justify" value="center" />
+		</style>
+	</append>
+
+</anan>

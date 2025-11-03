@@ -1,0 +1,5 @@
+<anan>
+
+	<set xpath="/items/item[@name='drugSteroids']/effect_group/display_value[@name='dCarryCapacity']/@value">120</set>
+	
+</anan>

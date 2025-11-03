@@ -1,0 +1,592 @@
+<!-- *** xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+<!-- **** 注释 (NOTES): -->
+<!-- *** xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+<!--
+	Game Events (游戏事件) - 这些事件是带有一系列需求 (Requirements) 的动作序列。
+		action_type (动作类型) - 动作序列的类型。(TwitchAction, TwitchVote, Game)
+		target_type (目标类型) - 动作序列的目标类型。(Entity 实体, POI 兴趣点, Block 方块)
+		allow_while_dead (死亡时允许) - 事件是否应在目标死亡后继续执行。
+
+	Requirements (需求):
+		需求可以用于事件本身，也可以用于事件中的单个动作。这些需求也控制着 while 循环的执行条件。
+
+		CVar - 检查目标是否设置了某个 cvar (自定义变量)。
+			operation (操作) - 允许进行常见的比较操作 (None 无, Equals 等于, NotEquals 不等于, Less/LessThan/LT 小于, Greater/GreaterThan/GT 大于, LessOrEqual/LessThanOrEqualTo/LTE 小于等于, GreaterOrEqual/GreaterThanOrEqualTo/GTE 大于等于)
+			cvar - 要检查的 cvar 名称。
+			value - 用于与 cvar 进行比较的值。
+
+		FullHealth (满生命值) - 检查目标的生命值是否已满。
+
+		Gamestage (游戏阶段) - 检查玩家的游戏阶段。
+			operation (操作) - 允许进行常见的比较操作。
+			game_stage - 要检查的游戏阶段数值。
+
+		GameStatBool (游戏状态布尔值) - 检查游戏的布尔型游戏状态。
+			gamestat - 要测试的游戏状态名称。
+
+		GameStatFloat (游戏状态浮点数) - 检查游戏的浮点型游戏状态。
+		GameStatInt (游戏状态整数) - 检查游戏的整数型游戏状态。
+			operation (操作) - 允许进行常见的比较操作。
+			gamestat - 要测试的游戏状态名称。
+
+		GroupLiveCount (组内活动实体数量) - 检查目标组中存活实体的数量。
+			operation (操作) - 允许进行常见的比较操作。
+			target_group (目标组) - 要测试的组。
+			count (数量) - 用于比较的值。
+
+		HasBuff (拥有Buff) - 检查目标是否拥有某个 Buff。
+			buff_name - 要检查的 Buff 名称。
+
+		HasBuffByTag (拥有带标签的Buff) - 检查目标是否拥有任何带有指定标签的 Buff。
+			buff_tags - 要检查的 Buff 标签名称。
+
+		HasSpawnedEntities (有已生成的实体) - 检查是否存在已生成的实体。
+			entity_tags (实体标签) - 已生成实体的标签。
+			target_only (仅限目标) - 是否必须是目标生成的实体。
+
+		InBiome (在生物群系中) - 检查目标是否在指定的某个生物群系中。
+			biomes - 用逗号分隔的生物群系列表。
+
+		InPOI (在兴趣点中) - 检查目标是否在指定的兴趣点内。
+			name (名称) - 兴趣点的名称。
+			tier (等级) - 兴趣点的等级。
+			tags (标签) - 兴趣点的标签。
+
+		InQuestZone (在任务区域内) - 检查目标是否在任务区域内。
+
+		InSafeZone (在安全区内) - 检查目标是否在安全区内。
+
+		InVehicle (在载具内) - 检查目标是否在载具内。
+
+		IsIndoors (在室内) - 检查玩家是否在室内。
+			invert (反转) - 可用于检查他们是否不在室内。
+
+		IsTwitchActive (Twitch 是否激活) - 检查目标是否开启了 Twitch 集成。
+
+		NearbyEntities (附近实体) - 检查目标附近是否有实体。
+			entity_tags (实体标签) - 附近实体的标签。(如果不提供标签，默认为任何敌人或动物)
+			max_distance (最大距离) - 检查附近实体的最大距离。
+			target_is_owner (目标是所有者) - 如果载具/炮塔归目标所有。
+
+		OnQuest (在任务中) - 检查目标是否正在进行某个任务。
+			quest (任务) - 任务的名称。如果不指定，则检查你是否有任何活动任务。
+
+		Progression (进度) - 检查目标的进度。
+			operation (操作) - 允许进行常见的比较操作。
+			name (名称) - 要检查的进度名称 (Skill 技能, Perk 专精, Book 书籍, Crafting 制作)。
+			value (值) - 用于比较的值。
+
+		RandomRoll (随机掷骰) - 将一个值与随机掷骰的结果进行比较。
+			min_max (最小/最大值) - 掷骰的范围。
+			operation (操作) - 允许进行常见的比较操作。
+			value (值) - 用于与掷骰结果比较的值。
+
+		VarFloat (浮点变量) - 检查游戏事件中的浮点变量。
+		VarInt (整数变量) - 检查游戏事件中的整数变量。
+			operation (操作) - 允许进行常见的比较操作。
+			var_name (变量名) - 要测试的变量。
+
+	Common Properties for all Actions (所有动作的通用属性):
+		Phase (阶段) - 这是动作运行的阶段。
+
+	Target Actions (目标动作):
+		大多数动作都可以提供一个 target_group (目标组)。下面列出的动作会将实体添加到这些组中。
+
+		AddClosestEntityToGroup (将最近的实体添加到组) - 将最近的实体添加到组中。
+		AddEntitiesToGroup (将实体添加到组) - 将所有符合定义条件的实体添加到组中。
+			group_name (组名) - 要添加到的组的名称。你可以定义任何你想要的名字。
+			entity_tags (实体标签) - 要搜索的实体标签。(如果不提供标签，默认为任何敌人或动物)
+			max_distance (最大距离) - 距离目标的距离。
+			twitch_negative (Twitch负面目标) - 这定义了是否可以添加被 Twitch 禁用的目标。注意：玩家死亡时被视为 Twitch 禁用。
+			target_is_owner (目标是所有者) - 如果载具/炮塔归目标所有。
+			y_height (Y轴高度) (AddEntitiesToGroup) - 覆盖使用的高度。
+			exclude_target (排除目标) - 从实体中排除目标本身。
+			allow_player (允许玩家) - 允许实体是玩家。
+
+		AddPartyToGroup (将队伍成员添加到组) - 将目标的队伍成员添加到组中。
+			group_name (组名) - 要添加到的组的名称。
+			twitch_negative (Twitch负面目标) - 定义是否可以添加被 Twitch 禁用的目标。
+			exclude_target (排除目标) - 排除动作的目标。
+			exclude_twitch_active (排除激活Twitch的玩家) - 排除除目标外任何正在直播的玩家。
+
+		AddPlayerToGroup (将玩家添加到组) - 将指定的队伍成员添加到组中。(注意：他们必须在目标的队伍中。)
+			player_name (玩家名称) - 要添加的队伍成员的名称。
+			group_name (组名) - 要添加到的组的名称。
+			twitch_negative (Twitch负面目标) - 定义是否可以添加被 Twitch 禁用的目标。
+
+		AddSpawnedEntitiesToGroup (将生成的实体添加到组) - 将所有生成的敌人添加到组中。
+			group_name (组名) - 要添加到的组的名称。
+			entity_tags (实体标签) - 要搜索的实体标签。
+			target_only (仅限目标) - 僵尸是否必须是在目标身上生成的，或者任何已生成的僵尸。
+
+		ClearGroup (清空组) - 清空一个组中的所有实体。
+			group_name (组名) - 要清空的组。
+
+	Player Actions (玩家动作):
+		Common Properties (通用属性):
+			target_group (目标组) - 此动作要作用的目标组。
+
+		AddBuff (添加Buff) - 将 Buff 添加到目标或目标组。
+			buff_name (Buff名称) - 要添加的 Buff。
+			removes_buff (移除的Buff) - 如果此 Buff 处于激活状态，则移除它而不是添加定义的 Buff。
+			alt_vision_buff_name (备用视觉Buff) - 如果定义了此项，那么当玩家将“允许视觉效果”设置为 false 时，将应用此备用 Buff。
+			check_already_exists (检查已存在) - 在允许添加 Buff 之前检查它是否已经存在。
+			duration (持续时间) - 覆盖 Buff 的持续时间。
+
+		AddChatMessage (添加聊天消息) - 向玩家的聊天窗口添加一条消息。
+			text (文本) - 要显示的文本。
+			text_key (文本键) - 要显示的本地化文本的键。
+
+		AddItemDurability (增加物品耐久度) - 增加你玩家身上物品的耐久度。
+			items_location (物品位置) - 受此影响的位置。可以是逗号分隔的列表。(Toolbelt 工具腰带, Backpack 背包, Equipment 装备, Held 手持)。
+			items_tags (物品标签) - 你想影响的物品的标签。
+			amount (数量) - 要增加的耐久度数量。
+			is_percent (是否为百分比) - 如果数量是百分比。
+			is_negative (是否为负数) - 如果数量是负数。
+			count_type (计数类型) - 使用的计数类型 (Items 物品, Slots 槽位)。
+			count (数量) - 要增加耐久度的物品数量，如果不指定数量，则会为所有物品增加。
+
+		AddItems (添加物品) - 向你的玩家添加物品。
+			added_items (添加的物品) - 用逗号分隔的要添加的物品列表。必须在 added_item_counts 中有匹配的条目。
+			added_item_counts (添加的物品数量) - 用逗号分隔的要添加的物品数量列表。必须在 added_items 中有匹配的条目。
+
+		AddPlayerLevel (增加玩家等级) - 为玩家增加指定的等级数。
+			levels (等级) - 要增加的等级数。
+
+		AddQuest (添加任务) - 为玩家添加一个任务。
+			quest (任务) - 为玩家添加的任务。
+			notify (通知) - 任务将在工具腰带上通知玩家并播放声音。
+
+		AddRandomBuff (添加随机Buff) - 向目标或目标组添加一个随机 Buff。
+			buff_names (Buff名称列表) - 从中随机选择一个 Buff 添加到目标。
+			removes_buff (移除的Buff) - 如果此 Buff 处于激活状态，则移除它而不是添加定义的 Buff。
+
+		AddSkillPoints (增加技能点) - 向目标或目标组添加 x 点技能点。
+			skill_points (技能点) - 要增加的技能点数量。
+
+		AddStartingItems (添加初始物品) - 将初始物品重新添加到目标或目标组。注意：这会覆盖工具腰带槽位。
+
+		AddXP (增加经验值) - 向目标或目标组添加 x 点经验值。
+			xp_amount (经验值数量) - 要增加的经验值数量。
+
+		AddXPDeficit (增加经验惩罚) - 向目标玩家增加经验惩罚。
+			xp_amount (经验惩罚数量) - 要增加的经验惩罚数量。
+
+		BeltTooltip (腰带提示) - 显示一个腰带工具提示。
+			text (文本) - 要显示的文本。
+			text_key (文本键) - 要显示的本地化键。
+			sound (声音) - 可以随工具腰带消息播放的声音。
+
+		CallGameEvent (调用游戏事件) - 从当前游戏事件中调用另一个游戏事件。
+				注意：如果你不小心导致触发了过多的事件，可能会引发问题。使用时请务必小心。
+			game_events (游戏事件列表) - 从中选择的事件列表。将随机选择一个。这可以像一个神秘的随机事件一样使用。
+
+		CloseWindow (关闭窗口) - 关闭指定的窗口。
+			window (窗口) - 要关闭的窗口。如果不指定窗口，则关闭所有窗口。
+
+		Delay (延迟) - 用于在动作之间设置延迟。通常用法是将其放在一个独立的阶段中，这样该阶段就会被延迟，直到此动作完成。
+			time (时间) - 延迟的时间。
+
+		DestroySafeZone (摧毁安全区) - 摧毁安全区范围。
+			destruction_type (摧毁类型) - 要执行的摧毁类型。可以是逗号分隔的列表，从中随机选择。
+									(Cube 立方体, Sphere 球体, Cylinder 圆柱体, LandClaimOnly 仅领地石)
+			new_name (新名称) - 在弹坑周围的标志上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+
+		DropHeldItem (丢弃手持物品) - 为目标丢弃手持的物品。
+
+		DropItems (丢弃物品) - 为目标丢弃物品。
+			items_location (物品位置) - 受此影响的位置。可以是逗号分隔的列表。(Toolbelt 工具腰带, Backpack 背包, Equipment 装备, BiomeBadge 生物群系徽章, Held 手持)。
+			items_tags (物品标签) - 你想丢弃的物品的标签。
+			drop_sound (丢弃声音) - 丢弃时播放的声音。
+			replaced_by_item (替换物品) - 替换被丢弃物品的物品。
+			count_type (计数类型) - 使用的计数类型 (Items 物品, Slots 槽位)。
+			count (数量) - 要丢弃的物品数量，如果不指定数量，则会丢弃所有。
+
+		EjectFromVehicle (从载具中弹出) - 使目标从载具中被弹出。
+
+		EmptyContainers (清空容器) - 清空所有容器/工作站。
+			targeting_type (目标类型) - SafeZone 安全区 或 Distance 距离。
+			new_name (新名称) - 在标志箱上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			include_fuel (包括燃料) - 包括工作站的任何燃料。
+			include_inputs (包括输入区) - 包括工作站的输入区域。例如熔炉熔炼的材料。
+			include_outputs (包括输出区) - 包括工作站的输出区域。(将清空配方队列)
+			include_tools (包括工具) - 包括工作站上的任何工具。(将清空配方队列)
+
+		EnemyToCrawler (敌人变爬行者) - 强制目标变为爬行者。(对玩家无效)
+
+		ExplodePosition (在位置爆炸) - 在指定位置引发爆炸。
+			blast_power (爆炸威力) - 爆炸的威力。
+			block_damage (方块伤害) - 对方块造成的伤害量。
+			block_radius (方块半径) - 方块伤害的半径。
+			block_tags (方块标签) - 受方块伤害影响的方块。
+			entity_damage (实体伤害) - 对实体造成的伤害量。
+			entity_radius (实体半径) - 实体伤害的半径。
+			particle_index (粒子索引) - 爆炸的粒子索引。
+
+		ExplodeTarget (在目标处爆炸) - 在目标身上引发爆炸。
+			blast_power (爆炸威力) - 爆炸的威力。
+			block_damage (方块伤害) - 对方块造成的伤害量。
+			block_radius (方块半径) - 方块伤害的半径。
+			block_tags (方块标签) - 受方块伤害影响的方块。
+			entity_damage (实体伤害) - 对实体造成的伤害量。
+			entity_radius (实体半径) - 实体伤害的半径。
+			particle_index (粒子索引) - 爆炸的粒子索引。
+
+		FailQuest (任务失败) - 使一个活动任务失败。
+			quest (任务) - 要失败的活动任务的名称。
+			remove_quest (移除任务) - 失败时从列表中移除任务。
+
+		FillAreas (填充区域) - 用指定的方块填充区域。
+			fill_type (填充类型) - 填充领地石区域的形状。可以是逗号分隔的列表，从中随机选择。(Cube 立方体, Sphere 球体, Cylinder 圆柱体, 和 Pyramid 金字塔)
+			destroy_claim (摧毁领地石) - 是否应摧毁领地石 (默认为 false)。
+			block (方块) - 用于填充领地石区域的方块。默认为 terrDirtTwitch。
+			new_name (新名称) - 在填充的基地周围的标志上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			block_tags (方块标签) - 要替换的方块的标签。
+			exclude_block_tags (排除方块标签) - 排除带有这些标签的方块。
+			replace_all (替换所有) - 替换所有方块。
+			max_density (最大密度) - 设置方块使用最大密度。
+
+		FillSafeZone (填充安全区) - 用指定的方块填充安全区。
+			fill_type (填充类型) - 填充领地石区域的形状。可以是逗号分隔的列表，从中随机选择。(Cube 立方体, Sphere 球体, Cylinder 圆柱体, 和 Pyramid 金字塔)
+			destroy_claim (摧毁领地石) - 是否应摧毁领地石 (默认为 false)。
+			block (方块) - 用于填充领地石区域的方块。默认为 terrDirtTwitch。
+			new_name (新名称) - 在填充的基地周围的标志上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			block_tags (方块标签) - 要替换的方块的标签。
+
+		FlipRotation (翻转朝向) - 将玩家的朝向改变为身后。
+
+		GetNearbyPoint (获取附近点) - 设置一个目标点，可用于将多个僵尸生成在一起。
+			min_distance (最小距离) - 距离目标的最小距离。
+			max_distance (最大距离) - 距离目标的最大距离。
+			safe_spawn (安全生成) - 是否可以在安全区内生成。
+			air_spawn (空中生成) - 这定义了是否应进行地面检查以确定该点是否有效。秃鹫使用此项以允许在飞行中生成。
+			yOffset (Y轴偏移) - 这允许该点在 y 轴上进行偏移。
+
+		GetLandClaimPosition (获取领地石位置) - 为附近的领地石设置一个目标点。
+
+		Kill (击杀) - 击杀目标或目标组。
+
+		ModifyCVar (修改CVar) - 修改一个 CVar 的值。
+			cvar - 要设置的 cvar。
+			value - 要设置 CVar 的值。
+			operation (操作) - 应该执行什么操作 (Set 设置, Add 加, Subtract 减, Multiply 乘, PercentAdd 百分比加, PercentSubtract 百分比减)。
+
+		ModifyEntityStat (修改实体属性) - 修改目标或目标组的实体属性。
+			stat (属性) - 要修改的属性 (Health 生命, Stamina 耐力, Food 食物, Water 水分)。
+			value (值) - 要设置 CVar 的值。
+			is_percent (是否为百分比) - 如果要设置 CVar 的值是百分比。
+			operation (操作) - 应该执行什么操作 (Set 设置, SetMax 设置为最大值, Add 加, Subtract 减, Multiply 乘)。
+
+		PauseBuff (暂停Buff) - 暂停一个 Buff，使其停止更新并隐藏图标。
+			buff_tags (Buff标签) - 要暂停的 Buff 的标签。
+			state (状态) - 是否暂停 (true/false)。
+
+		PlaySound (播放声音) - 为目标播放一个声音。
+			sound (声音) - 要播放的声音的名称。
+			inside_head (在脑内播放) - 如果声音在目标的脑内播放。
+			behind_player (在玩家身后) - 如果声音应选择玩家身后的一个点播放。(与 inside_head 不兼容。)
+			loop_duration (循环持续时间) - 如果是循环声音，只播放这么多秒。
+
+		PrimeEntity (引爆实体) - 引爆警察/爆破僵尸的炸药，使其在指定的秒数后爆炸。
+			override_time (覆盖时间) - 从开始发出哔哔声到爆炸的秒数。
+
+		PullEntities (拉取实体) - 强制所有实体在目标周围重新生成。
+			target_group (目标组) - 要拉取到目标的组。(这与大多数用法不同，所以属性名可能会改变。)
+			min_distance (最小距离) - 它们可以生成的最小距离。
+			max_distance (最大距离) - 它们可以生成的最大距离。
+			pull_sound (拉取声音) - 实体被拉取时播放的声音。
+
+		PushEntity (推动实体) - 将玩家/僵尸向指定方向推动指定距离。
+			direction (方向) - 推动实体的方向。(Random 随机, Forward 向前, Backward 向后, Right向右, Left向左)
+			distance (距离) - 推动实体的距离。
+
+		Ragdoll (布娃娃) - 使目标或目标组进入布娃娃状态。
+			stun_duration (眩晕持续时间) - 应用于目标/目标组的眩晕持续时间。
+
+		RandomizeRotation (随机化朝向) - 随机化玩家在 y 轴上的朝向。
+
+		RandomTeleport (随机传送) - 随机传送目标/目标组。
+			min_distance (最小距离) - 他们可以传送的最小距离。
+			max_distance (最大距离) - 他们可以传送的最大距离。
+
+		RemoveBuff (移除Buff) - 移除指定的 Buff。
+			buff_name (Buff名称) - 应该被移除的 Buff 的名称。
+
+		RemoveBuffsByTag (按标签移除Buff) - 按标签移除所有 Buff。
+			buff_tag (Buff标签) - 要移除的 Buff 标签。
+
+		RemoveDeathBuffs (移除死亡Buff) - 移除死亡 Buff。
+			exclude_tags (排除标签) - 移除死亡 Buff 时要排除的标签。
+
+		RemoveEntities (移除实体) - 移除 target_group 中的实体。如果你对目标本身尝试此操作，可能会引发一个巨大的错误。
+
+		RemoveItems (移除物品) - 从玩家身上移除物品。
+			items_location (物品位置) - 受此影响的位置。可以是逗号分隔的列表。(Toolbelt 工具腰带, Backpack 背包, Equipment 装备, BiomeBadge 生物群系徽章, Held 手持)。
+			items_tags (物品标签) - 你想移除的物品的标签。
+			count_type (计数类型) - 使用的计数类型 (Items 物品, Slots 槽位)。
+			count (数量) - 要替换的物品数量，如果不指定数量，则会移除所有。
+
+		RemoveSpawnedBlocks (移除生成的方块) - 移除所有生成的方块。
+			despawn (消失) - 是否是消失。
+			target_only (仅限目标) - 仅为目标移除。
+
+		RemoveVehicles (移除载具) - 从世界中移除载具/炮塔。
+			return_fuel (返还燃料) - 将载具中的燃料放入背包。
+			return_items (返还物品) - 将载具中的所有物品放在地上的一个背包里。
+			return_vehicle_type (返还载具类型) - 是否包括载具、零件或无 (Vehicle 载具, Parts 零件, None 无)。
+
+		RenameSigns (重命名标志) - 重命名附近所有标志或领地石内标志的文本。
+			targeting_type (目标类型) - SafeZone 安全区 或 Distance 距离。
+			new_name (新名称) - 在标志箱上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			max_distance (最大距离) - 容器的最大距离。
+
+		ReplaceBuff (替换Buff) - 用另一个 Buff 替换单个 Buff。
+			replace_buff (被替换的Buff) - 要被替换的 Buff。
+			replace_with_buff (替换为的Buff) - 用于替换被替换 Buff 的 Buff。
+
+		ReplaceEntities (替换实体) - 替换 target_group 中的实体。如果你对目标本身尝试此操作，可能会引发一个巨大的错误。
+			entity_names (实体名称) - 用于替换 target_group 的实体。如果多于一个，将随机选择一个。
+			single_choice (单一选择) - 如果正在替换多个实体，只选择一次僵尸类型并用于所有实体。
+
+		ReplaceItems (替换物品) - 用另一个物品替换指定的物品。
+			items_location (物品位置) - 受此影响的位置。可以是逗号分隔的列表。(Toolbelt 工具腰带, Backpack 背包, Equipment 装备, BiomeBadge 生物群系徽章, Held 手持)。
+			replaced_by_item (替换为的物品) - 你用来替换带标签物品的物品。
+			items_tags (物品标签) - 应该被替换的物品的标签。
+			count_type (计数类型) - 使用的计数类型 (Items 物品, Slots 槽位)。
+			count (数量) - 要替换的物品数量，如果不指定数量，则会替换所有。
+
+		ReplaceItemsContainers (替换容器内物品) - 替换附近容器或领地石内容器的内容。
+			targeting_type (目标类型) - SafeZone 安全区 或 Distance 距离。
+			new_name (新名称) - 在标志箱上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			max_distance (最大距离) - 容器的最大距离。
+			include_outputs (包括输出区) - 包括工作站的输出区域。(将清空配方队列)
+			replaced_by_item (替换为的物品) - 你用来替换带标签物品的物品。
+			items_tags (物品标签) - 应该被替换的物品的标签。
+
+		ResetMap (重置地图) - 重置地图探索和/或路径点。
+			remove_discovery (移除探索) - 移除所有地图探索。
+			remove_waypoints (移除路径点) - 从地图上移除所有路径点。
+
+		ResetPlayerData (重置玩家数据) - 将玩家重置为一级，并可选择移除所有领地石/睡袋。
+			reset_skills (重置技能) - 将你的技能重置为 1。
+			reset_levels (重置等级) - 将等级重置为 1 (如果选择，会自动重置技能)。
+			reset_crafting (重置制作) - 将你的制作等级重置为 1。
+			reset_books (重置书籍) - 将所有书籍专精重置为 0。
+			remove_landclaims (移除领地石) - 移除所有领地石。
+			remove_bedroll (移除睡袋) - 移除玩家的睡袋。
+			remove_quests (移除任务) - 移除玩家的所有任务。
+			remove_backpack (移除背包) - 移除他们掉落背包的所有位置数据。
+			reset_stats (重置统计) - 重置你所有的玩家统计数据，如击杀、死亡等。
+
+		RespawnEntities (重生实体) - 从提供的 target_group 中重生所有死亡的实体。
+			target_group (目标组) - 要重生的实体组。
+			is_multi (是否多次) - 这个应该连续运行还是一次性。
+			respawn_sound (重生声音) - 实体重生时播放的声音。
+
+		SetFuel (设置燃料) - 设置目标载具的燃料。
+			target_group (目标组) - 要与之交互的载具组。
+			setting_type (设置类型) - 应该对载具完成的操作。(Remove 移除, Fill 加满)
+
+		SetHordeNight (设置血月) - 将下一个血月设置为今天。
+			day_offset (天数偏移) - 血月距离当前游戏日期的天数。
+			keep_bm_day (保留血月日) - 保留之前的血月日。
+
+		SetScreenEffect (设置屏幕效果) - 为本地玩家设置屏幕效果。
+			screen_effect (屏幕效果) - 要设置的屏幕效果。
+			intensity (强度) - 屏幕效果的强度。
+			fade_time (淡入淡出时间) - 淡入到该强度所需的时间（秒）。
+
+		SetDayTime (设置日期时间) - 设置游戏的日期/小时/分钟。
+			day (天) - 要设置的天 (-1 表示不改变天)。
+			hours (小时) - 要设置的小时 (-1 表示不改变小时)。
+			minutes (分钟) - 要设置的分钟 (-1 表示不改变分钟)。
+
+		SetEventFlag (设置事件标志) - 在一段时间内设置事件标志。
+			event_flag (事件标志) - 要启用的事件标志。(BigHead 大头, Dancing 跳舞, BucketHead 桶头)
+			duration (持续时间) - 世界事件激活的时间。
+			enable (启用) - 是否启用/禁用。
+
+		SetItemSlots (设置物品槽位) - 设置指定物品栏的槽位。
+			items_location (物品位置) - 要设置槽位的位置 (Backpack 背包, Toolbelt 工具腰带, Equipment 装备, BiomeBadge 生物群系徽章)。
+			items (物品) - 用逗号分隔的要添加的物品列表。必须在 item_counts 中有匹配的条目。
+			item_counts (物品数量) - 用逗号分隔的要添加的物品数量列表。必须在 items 中有匹配的条目。
+			slot_numbers (槽位编号) - 用逗号分隔的槽位编号。必须在 items 中有匹配的条目。
+
+		SetWeather (设置天气) - 将全局天气设置为定义的天气组。
+			weather_group (天气组) - 要将世界设置为的天气组。
+
+		ShowMessageWindow (显示消息窗口) - 向目标显示消息窗口。
+			message (消息) - 显示的消息。
+			title (标题) - 消息的标题。
+
+		ShuffleContainers (打乱容器) - 打乱附近所有方块容器的内容。注意：这可能会让玩家非常生气。请谨慎使用。
+			targeting_type (目标类型) - SafeZone 安全区 或 Distance 距离。
+			new_name (新名称) - 在标志箱上显示的名称。你可以使用 {viewer} 来代表触发它的观众。
+			max_distance (最大距离) - 容器的最大距离。
+			include_outputs (包括输出区) - 包括工作站的输出区域。(将清空配方队列)
+
+		ShuffleItems (打乱物品) - 打乱目标背包/工具腰带的内容。
+			items_location (物品位置) - 要打乱的位置 (Backpack 背包, Toolbelt 工具腰带)。
+
+		SpawnContainer (生成容器) - 在地上生成一个容器。(处理箱子共享代码)
+		SpawnEntity (生成实体) - 在地上生成一个实体。
+			entity_names (实体名称) - 要生成的实体。如果多于一个，将随机选择一个。
+			entity_group (实体组) - 要从中生成的实体组。(不能与 entity_names 一起使用)
+			single_choice (单一选择) - 如果正在生成多个实体，只选择一次随机选择。
+			spawn_count (生成数量) - 要生成的实体数量。
+			min_distance (最小距离) - 生成的最小距离。
+			max_distance (最大距离) - 生成的最大距离。
+			safe_spawn (安全生成) - 是否可以在安全区内生成。
+			target_group (目标组) - 可用于在一组玩家（如队伍）身上生成。
+			add_to_group (添加到组) - 将生成的实体添加到指定的组。(可能应该重命名以避免混淆)
+			attack_target (攻击目标) - 生成后是否应立即攻击目标。(对箱子或不攻击的动物无效。)
+			air_spawn (空中生成) - 这定义了是否应进行地面检查以确定是否应生成。秃鹫使用此项以允许在飞行中生成。
+			yOffset (Y轴偏移) - 这允许生成在 y 轴上进行偏移。
+			spawn_type (生成类型) - 生成类型 (NearTarget 靠近目标, Position 在位置, NearPosition 靠近位置, WanderingHorde 游荡尸群)。
+			clear_position_on_complete (完成后清除位置) - 完成后清除目标位置。
+			is_aggressive (有攻击性) - 实体将不断寻找最近的玩家并攻击。
+
+		Teleport (传送) - 将目标传送到定义的位置或偏移量。
+			target_position (目标位置) - 要将目标传送到的位置/偏移量。
+			offset_type (偏移类型) - None 无: 传送到世界坐标。
+						Relative 相对: 相对于你的位置传送。
+							World 世界: 相对于世界，基于你的位置传送。
+						
+		TeleportNearby (传送到附近) - 将目标传送到定义的附近位置 (使用 GetNearbyPoint)。
+
+		TeleportToSpecial (传送到特殊位置) - 将目标传送到特殊位置。(仅对玩家有效。)
+			special_type (特殊类型) - 这可以是 Bedroll 睡袋, Landclaim 领地石, 或 Backpack 背包。
+
+		TeleportToTarget (传送到目标) - 将一个目标传送到另一个目标。
+			target_group (目标组) - 要传送到目标的目标组。(默认为动作目标)
+			teleport_to_group (传送到组) - 要传送到的目标。如果组中多于一个，则传送到随机一个。(默认为动作目标)
+			min_distance (最小距离) - 传送的最小距离。
+			max_distance (最大距离) - 传送的最大距离。
+			safe_spawn (安全生成) - 是否可以在安全区内传送。
+			air_spawn (空中生成) - 这定义了是否应进行地面检查以确定是否应传送。
+			yOffset (Y轴偏移) - 这允许传送在 y 轴上进行偏移。
+
+		TimeChange (时间改变) - 根据 time_preset 和 offset 向前或向后移动时间。
+			time_preset (时间预设) - 将时间设置为预定义的时间 (Current 当前, Morning 早晨, Noon 中午, Night 夜晚, NextMorning 第二天早晨, NextNoon 第二天中午, NextNight 第二天夜晚, HordeNight 血月夜)。
+			time (时间) - 基于 time_preset 移动的时间量。
+
+		WaitForDead (等待死亡) - 类似于 Delay，在指定的 target_group 全部死亡之前，不会进入下一阶段。
+			phase_on_despawn (消失时阶段) - 如果其中一个目标消失了，要进入的阶段。
+
+	Block Actions (方块动作):
+		Common Properties (通用属性):
+			min_offset (最小偏移) - 偏移的最小范围。
+			max_offset (最大偏移) - 偏移的最大范围。
+			spacing (间距) - 每个方块动作之间的间距。
+			inner_offset (内部偏移) - 从中心排除多少空间。
+			random_chance (随机几率) - 在偏移范围内每个方块发生动作的随机几率。
+			safe_allowed (允许在安全区) - 是否允许在安全区内。
+			block_tags (方块标签) - 受方块动作影响的方块。
+			allow_terrain (允许地形) - 受影响的方块是否可以是地形方块。
+			exclude_tags (排除标签) - 如果方块包含该标签，则排除它。
+
+		BlockAnimateBlock (方块播放动画) - 设置定义范围内的所有方块触发一个动画。
+			animation_bool (动画布尔值) - 要设置的动画布尔值。
+			animation_bool_value (动画布尔值的值) - 为动画布尔值设置的值。
+			animation_integer (动画整数) - 要设置的动画整数值。
+			animation_integer_value (动画整数的值) - 为动画整数设置的值。
+			animation_trigger (动画触发器) - 要启用的动画触发器。
+
+		BlockDoorState (门状态) - 将定义范围内的所有门设置为指定的打开状态。
+			set_open (设置为打开) - 门是否应设置为打开或关闭 (true/false)。
+			set_lock (设置为锁定) - 门是否应被锁定 (true/false)。
+
+		BlockDowngrade (方块降级) - 将定义范围内的所有方块设置为其定义的降级方块。
+
+		BlockGrowCrops (作物生长) - 将附近所有植物设置为其下一个生长阶段。
+
+		BlockUpgrade (方块升级) - 将定义范围内的所有方块设置为其定义的升级方块。
+
+		BlockHealth (方块生命值) - 将定义范围内的所有方块设置为指定的生命值。
+			health_state (生命状态) - 方块的生命值。(Full 满, Half 半, OneHealth 一点血)
+
+		BlockReplace (替换方块) - 用定义的方块替换方块。
+			block_to (替换为的方块) - 要将旧方块更改为的新方块。
+			empty_only (仅限空格) - 仅当它是空气方块时才替换。
+
+	POI Actions (兴趣点动作):
+
+		POISetLightState (设置兴趣点灯光状态) - 允许设置 POI 中灯光的状态。
+			enable_lights (启用灯光) - POI 中的灯光应打开还是关闭。
+			index_block_name (索引方块名称) - 为需要打开/关闭的灯光设置的索引方块名称。
+
+		POIReset (重置兴趣点) - 重置 POI 区块。
+
+	Twitch Actions (Twitch 动作):
+
+		TwitchAddPoints (增加Twitch点数) - 为指定的观众增加一定数量的点数。
+			amount (数量) - 点数数量。
+			point_type (点数类型) - 点数的类型 (PP, SP, Bits)。
+			recipient_type (接收者类型) - 这些点数的接收者 (Requester 请求者, All 所有, Random 随机)。
+				注意：Bit Credit 不能给 All。
+			award_text (奖励文本) - 奖励时在 Twitch 聊天中显示的文本。
+				变量: viewer, amount
+			requester_only (仅限请求者) - 是否只应在发起它的聊天中显示。如果你正在与使用集成的主播进行多流，那么如果此项设置为 false，它也将在他们的聊天中给予点数。
+
+		TwitchAddActionCooldown (增加动作冷却时间) - 为定义的动作增加一定数量的冷却时间。
+			action_name (动作名称) - 将被设置为冷却的动作列表。这是名称，而不是 #command 名称。
+			time (时间) - 动作处于冷却状态的时间。
+			search_type (搜索类型) - 我们是使用命名的，还是所有正面或负面的。(Name 名称, Positive 正面, Negative 负面)
+
+		TwitchEndCooldown (结束冷却时间) - 结束当前的冷却时间。
+
+		TwitchSendChannelMessage (发送频道消息) - 发送一条频道消息。你可以使用变量 {target} 和 {viewer}。
+			text (文本) - 要发送的文本。
+			text_key (文本键) - 要发送的本地化文本的键。
+				变量: target, viewer
+
+		TwitchStartCooldown (开始冷却时间) - 开始一个有时间的冷却。
+			time (时间) - 冷却的时间。
+
+		TwitchStartVote (开始投票) - 开始一个投票。
+			vote_type (投票类型) - 要开始的投票组的名称。
+
+		TwitchVoteDelay (延迟投票) - 将下一次投票延迟定义的秒数。
+			time (时间) - 延迟的时间。
+
+	Variable Actions (变量动作):
+		这些允许临时存储一个值以用于需求。后续会有更多。
+
+		ModifyVarFloat (修改浮点变量) - 修改一个变量的浮点值。
+			var_name (变量名) - 变量的名称。
+			value (值) - 要设置变量的值。
+			operation (操作) - 应该执行什么操作 (Set 设置, Add 加, Subtract 减, Multiply 乘)。
+
+		ModifyVarInt (修改整数变量) - 修改一个变量的整数值。
+			var_name (变量名) - 变量的名称。
+			value (值) - 要设置变量的值。
+			operation (操作) - 应该执行什么操作 (Set 设置, Add 加, Subtract 减, Multiply 乘)。
+
+	Decisions (决策):
+		这些使用 <decision> 定义。它们可以包含任意数量的需求/动作。你目前不能在决策中使用循环。
+
+		If (如果) - 检查是否满足需求以执行动作。
+			condition_type (条件类型) - 这定义了需求是全部满足还是任意满足。(All 全部, Any 任意)
+
+	Loops (循环):
+		这些使用 <loop> 定义。它们可以包含任意数量的动作/等待。你不能在循环中使用循环。
+
+		For (For循环) - 循环指定的次数。
+			loop_count (循环次数) - 此循环将使用的次数。
+			min_loop_count (最小循环次数) - 如果你想要一个随机的循环次数，这是最小值。
+			max_loop_count (最大循环次数) - 如果你想要一个随机的循环次数，这是最大值。
+			loop_count_cvar (循环次数cvar) - 循环次数也可以来自一个 CVar。
+
+		While (While循环) - 循环直到需求无效。
+			condition_type (条件类型) - 这定义了需求是全部满足还是任意满足。(All 全部, Any 任意)
+
+	Wait (等待):
+		这些使用 <wait> 定义。它们包含任意数量的需求。
+
+		Common Properties (通用属性):
+			condition_type (条件类型) - 这定义了需求是全部满足还是任意满足。(All 全部, Any 任意)
+
+		While (当...时等待) - 当等待条件为真时等待。
+
+		Until (直到...时等待) - 等到等待条件为真。
+-->

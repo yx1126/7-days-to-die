@@ -1,0 +1,5 @@
+<anan>
+  
+   <set xpath="/lootcontainers/lootcontainer[@name='playerBackpack']/@size">12,13</set>
+  
+</anan>

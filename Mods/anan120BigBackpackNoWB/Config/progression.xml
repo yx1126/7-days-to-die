@@ -1,0 +1,7 @@
+<anan>
+ 
+   <set xpath="/progression/perks/perk[@name='perkPackMule']/effect_group/passive_effect[@name='CarryCapacity']/@value">60,60,60,60,60</set>
+   <set xpath="/progression/perks/book[@name='perkFiremansAlmanacComplete']/effect_group/passive_effect[@name='CarryCapacity']/@value">120</set>
+   <set xpath="/progression/perks/book[@name='perkNightStalkerThiefAdrenaline']/effect_group/passive_effect[@name='CarryCapacity']/@value">120</set>
+  
+</anan>

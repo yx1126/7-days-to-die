@@ -1,0 +1,24 @@
+<anan>
+  
+   <set xpath="/controls/ingredient_header/rect[@name='header']/@width">851</set>
+   <set xpath="/controls/ingredient_header/rect[@name='header']/rect[2]/@width">640</set>
+   <set xpath="/controls/ingredient_header/rect[@name='header']/rect[2]/sprite[@name='backgroundMain']/@width">646</set>
+   <set xpath="/controls/ingredient_header/rect[@name='header']/rect[2]/label[@text='NAME']/@pos">317,-23</set>
+   <set xpath="/controls/ingredient_header/rect[@name='header']/rect[2]/label[@text='NAME']/@width">636</set>
+   <set xpath="/controls/ingredient_header/rect[@name='header']/rect[3]/@pos">711,0</set>	
+   <set xpath="/controls/ingredient_row/rect[@name='row']/@width">851</set>
+   <set xpath="/controls/ingredient_row/rect[@name='row']/rect[2]/@width">640</set>
+   <set xpath="/controls/ingredient_row/rect[@name='row']/rect[2]/sprite[@name='backgroundMain']/@width">646</set>
+   <set xpath="/controls/ingredient_row/rect[@name='row']/rect[2]/label[@name='name']/@pos">317,-23</set>
+   <set xpath="/controls/ingredient_row/rect[@name='row']/rect[2]/label[@name='name']/@width">636</set>
+   <set xpath="/controls/ingredient_row/rect[@name='row']/rect[3]/@pos">711,0</set>	
+   <set xpath="/controls/unlocked_by_header/rect[@name='header']/@width">851</set>
+   <set xpath="/controls/unlocked_by_header/rect[@name='header']/rect[2]/@width">707</set>
+   <set xpath="/controls/unlocked_by_header/rect[@name='header']/rect[2]/sprite[@name='backgroundMain']/@width">713</set>
+   <set xpath="/controls/unlocked_by_header/rect[@name='header']/rect[3]/@pos">773,0</set>	
+   <set xpath="/controls/unlocked_by_row/rect[@name='row']/@width">851</set>
+   <set xpath="/controls/unlocked_by_row/rect[@name='row']/rect[2]/@width">707</set>
+   <set xpath="/controls/unlocked_by_row/rect[@name='row']/rect[2]/sprite[@name='backgroundMain']/@width">713</set>
+   <set xpath="/controls/unlocked_by_row/rect[@name='row']/rect[3]/@pos">773,0</set>
+  
+</anan>
