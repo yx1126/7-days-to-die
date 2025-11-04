@@ -1,0 +1,22 @@
+{
+    "name": "7-days-to-die",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "node ./index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.14.0",
+    "devDependencies": {
+        "@types/file-saver": "^2.0.7",
+        "@types/fs-extra": "^11.0.4",
+        "csv-parse": "^6.1.0",
+        "file-saver": "^2.0.5",
+        "fs-extra": "^11.3.2",
+        "xlsx": "^0.18.5"
+    }
+}
