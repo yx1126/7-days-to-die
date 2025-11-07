@@ -1,0 +1,134 @@
+File: BIOMES.XML
+
+
+Ore distribution:
+
+The terrain blending shader can only blend 3 textures so if you add more than 3 types it ends up having hard lines and looks horrible.
+This is the technical reason why ores are so strictly limited per biome.
+
+The gameplay reason is to promote some travel instead of staying in one spot all game long, looting the same town over and over.
+
+Ergo: It's stone + iron + something PER LAYER.
+
+You can still stagger different layers with different ores / distributions.
+If you make layers varied, small and plentiful you will get more seam lines where 4+ textures interact. Your choice.
+
+Another possibility is to generate subbiomes that look the same on the surface but have a different layer setup.
+This may or may not become a feature.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The world is saved / loaded as chunks of 16x256x16 (x y z) blocks.
+
+
+=====================================================================
+=====================================================================
+
+Icons for blocks and items:
+
+If there is a 	<property name="CustomIcon" value="blah" />
+neither the icon nor a placeholder space are baked into the icon atlas.
+
+The icon atlas is generated at
+\Assets\Resources\GUI\Atlases\ItemIcons.png
+\Assets\Resources\GUI\Atlases\ItemIcons.txt
+
+=====================================================================
+=====================================================================
+
+Armor value templates:
+
+I used these templates to assign armor values to "other stuff".
+
+
+	<property class="Attributes"> <!-- clothGeneric -->
+		<property name="ConcussiveProtection" value="0.065,0.13" />
+		<property name="PunctureProtection"   value="0.065,0.13" />
+		<property name="FireProtection"       value="0.12,0.2" />
+		<property name="RadiationProtection"  value="0.06,0.1" />
+		<property name="DegradationMax"       value="72,180" />
+	</property>
+
+	<property class="Attributes"> <!-- plantFiberClothes -->
+		<property name="ConcussiveProtection" value="0.09,0.15" />
+		<property name="PunctureProtection"   value="0.09,0.15" />
+		<property name="FireProtection"       value="0.12,0.2" />
+		<property name="RadiationProtection"  value="0.06,0.1" />
+		<property name="DegradationMax"       value="72,180" />
+	</property>
+
+	<property class="Attributes"> <!-- clothWarm -->
+		<property name="ConcussiveProtection" value="0.08,0.2" />
+		<property name="PunctureProtection"   value="0.08,0.2" />
+		<property name="FireProtection"       value="0.12,0.2" />
+		<property name="RadiationProtection"  value="0.06,0.1" />
+		<property name="DegradationMax"       value="80,200" />
+	</property>
+
+
+	<property class="Attributes"> <!-- clothArmor -->
+		<property name="ConcussiveProtection" value="0.125,0.25" />
+		<property name="PunctureProtection"   value="0.125,0.25" />
+		<property name="FireProtection"       value="0.1,0.2" />
+		<property name="RadiationProtection"  value="0.075,0.15" />
+		<property name="DegradationMax"       value="100,250" />
+	</property>
+
+	<property class="Attributes"> <!-- hideArmor -->
+		<property name="ConcussiveProtection" value="0.07,0.35" />
+		<property name="PunctureProtection"   value="0.06,0.3" />
+		<property name="FireProtection"       value="0.04,0.2" />
+		<property name="RadiationProtection"  value="0.04,0.2" />
+		<property name="DegradationMax"       value="140,350" />
+	</property>
+
+	<property class="Attributes"> <!-- leatherArmor -->
+		<property name="ConcussiveProtection" value="0.152,0.38" />
+		<property name="PunctureProtection"   value="0.12,0.3" />
+		<property name="FireProtection"       value="0.12,0.3" />
+		<property name="RadiationProtection"  value="0.08,0.2" />
+		<property name="DegradationMax"       value="180,450" />
+	</property>
+
+	<property class="Attributes"> <!-- scrapArmor -->
+		<property name="ConcussiveProtection" value="0.228,0.57" />
+		<property name="PunctureProtection"   value="0.18,0.45" />
+		<property name="FireProtection"       value="0.16,0.4" />
+		<property name="RadiationProtection"  value="0.12,0.3" />
+		<property name="DegradationMax"       value="240,600" />
+	</property>
+
+	<property class="Attributes"> <!-- ironArmor -->
+		<property name="ConcussiveProtection" value="0.26,0.65" />
+		<property name="PunctureProtection"   value="0.24,0.6" />
+		<property name="FireProtection"       value="0.2,0.5" />
+		<property name="RadiationProtection"  value="0.16,0.4" />
+		<property name="DegradationMax"       value="320,800" />
+	</property>
+
+	<property class="Attributes"> <!-- militaryArmor -->
+		<property name="ConcussiveProtection" value="0.28,0.7" />
+		<property name="PunctureProtection"   value="0.3,0.75" />
+		<property name="FireProtection"       value="0.08,0.2" />
+		<property name="RadiationProtection"  value="0.12,0.3" />
+		<property name="DegradationMax"       value="280,700" />
+	</property>
+
+	<property class="Attributes"> <!-- hazMatArmor -->
+		<property name="ConcussiveProtection" value="0.08,0.2" />
+		<property name="PunctureProtection"   value="0.1,0.25" />
+		<property name="FireProtection"       value="0.04,0.1" />
+		<property name="RadiationProtection"  value="0.32,0.8" />
+		<property name="DegradationMax"       value="160,400" />
+	</property>
+
+=====================================================================
+=====================================================================
+
+A15 stuff
+
+Weeeell, you may occasionally see the odd "A15" comment here and there.
+Some things just did not get done in time. It's real life's way to show you the finger.
+If you choose to "mod in" those totally-absolutely-not-QA-approved features or not is up to you.
+They may destroy your game or blow up planet Earth. I'm not saying it's likely but...

@@ -1,6 +1,0 @@
-<anan>
-  
-   <set xpath="/xui/ruleset[@name='default']/@scale">1.05</set>
-   <set xpath="/xui/ruleset[@name='default']/@stackpanel_scale">0.98</set>
-   
-</anan>

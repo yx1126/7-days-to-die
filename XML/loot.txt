@@ -1,0 +1,98 @@
+File: LOOT.XML
+
+
+How random loot generation works now:
+
+A loot container defines a list of items and/or lootgroups, a count, and a size configuration.
+
+The size configuration is the strict limit on the what the container can hold, and this limit can be reached even if
+your container specifies a much smaller count value.
+
+The loot containers count value specified how many if the items in the containers loot list should be selected randomly.
+NOTE: that the same item could be chosen more than one time.
+
+If the chosen item is an item then the item is spawned into the container according to its count.
+
+However if the chosen item is a lootgroup then a lootgroup is spawned into the container.
+
+Loot Groups:
+
+NOTE: if a lootgroup says count="all" then all subitems will be spawned.
+
+A lootgroup functions identically to a container in its spawning logic. A lootgroup has a count like a container does.
+The count value specifies how many items out of the lootgroup should be spawned each time the lootgroup is spawend. This
+can lead to multiplicitive behaviour if it is setup that way for example:
+
+<lootgroup name="group1" count="2" level="25,50">
+	...
+</lootgroup>
+
+<lootcontainer id="1" count="2" size="4,4">
+	<item group="group1" count="2">
+</lootcontainer>
+
+The above example would spawn the contents of group1 8 times. Here's why:
+The container is told to spawn 2 items, since there's only 1 item in the container it will choose group1
+2 times. Each time group1 is chosen, the container <item group="group1" count="2"> line specifies that
+the contents of group1 should be spawned 2 times. So on the first iteration of the container group1 is spawned
+2 times, and then again on the second iteration.
+
+The group1 lootgroup specifies that each time it is spawned (recall 4 times in the example) that is should
+select 2 items from its list.
+
+So the above example would spawn 8 items into the container.
+
+NOTE: it is safe to specify groups and counts that exceed the containers capacity. If the containers space
+is exceeded excess items will not be spawned, and items will automatically stack to fill the container.
+
+<item name="smallEngine" quality="1,200"/>
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Optional attributes of a lootcontainer:
+"buff"
+"buff_chance"
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Adjusting gun accuracy / spread (way obsolete in A17+)
+
+Crosshair_min_distance(int): the min size of the crosshairs on screen
+			Increasing it also increases the spread of Magazine_item_ray_spreads
+Crosshair_max_distance(int): the max size of the crosshairs on screen
+
+Magazine_item_ray_spreads: The projectile spread, both zoomed and hip-fired
+			Used for shotguns and pistols.
+
+			"Magazine_item_ray_spreads" generates a wider cone if the player is moving fast.
+
+Rays_spread:		Technically deprecated but still used because... it's what we got.
+			This one works for launchers but has a completely different scale.
+
+Accuracy: 		Attribute, can scale with QL
+			The spread of the weapon if hip-fired.
+			If Accuracy is defined, Magazine_item_ray_spreads is floored to zero
+			and aimed fire is dead on.
+			Used for rifles.
+
+			"Accuracy" uses a CYLINDER for the shot projection, not a cone.
+
+Zoom_max_out / Zoom_max_in: Those are plain FOV values
+
+Ranges measured at a FOV of 72. (only noobs use the default of 50)
+For FOV 50 multiply them by about 1.5.
+
+gunRocketLauncher
+	s0.095, 8.5m, 1m spread
+gunSawedOffPumpShotgun / blunderbuss
+	s0.74, 6m, 1m spread
+gunPumpShotgun
+	s0.835, 11m, 1m spread (shell) = 5.2°
+	s0.605, 25m, 1m spread (slug) = 2.29°
+
+
+Spread 5°: 2.6m @ 30m
+Spread 5°: 2.6m @ 30m
+
+Spread 15°: 4.3m @ 16m   or 14.5 sqm
+
+A zombie standing inside a 1m spread cone covers 55% of the whole cone.

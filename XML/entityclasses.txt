@@ -1,0 +1,38 @@
+File: ENTITYCLASSES.XML
+
+
+Target parameters for AITask properties:
+
+EntityAnimalBear
+EntityAnimalRabbit
+EntityAnimalStag
+EntityCar
+EntityEnemy
+EntityFallingBlock
+EntityFallingTree
+EntityItem
+EntityNPC
+EntityPlayer
+EntitySupplyCrate
+EntitySupplyPlane
+EntityVehicle
+
+
+<property name="AITask-3" value="Territorial"/>
+	(unused in A16) see spawning.xml
+	If an ENTITYSPAWNER has Territorial=true and TerritorialRange=distance and the entity_class (here) has AITask Territorial
+	then an entity WILL return to it's spawn point (ignoring everything) when it exceeds this distance.
+
+In general there are 2 classes of tasks in this entity system.
+AITask- : movement task that decides what to do, possibly with the chosen target
+AITarget- : targeting task, it determines what the entity should target
+
+
+<property name="AITask-6" value="ApproachAndAttackTarget" data="class=EntityPlayer"/>
+param2 : give up time
+If the entity is chasing a target for this long it will potentially give up... unless the
+target is still in range/sight, in which case the pursuit is continued.
+Essentially you have to break LOS for this long.
+
+An entity will be aggro again if attacked after it has stopped pursueing.
+(bug in 16.0: Zombies never seem to stop pursueing)

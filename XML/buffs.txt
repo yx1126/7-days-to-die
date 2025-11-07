@@ -1,0 +1,273 @@
+File: BUFFS.XML
+
+General info:
+Buffs are not executed by "going down the list". Their order in the XML is irrelevant.
+
+Buffs do stuff all the time in an order that is complex and depends on a lot of things.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A "BuffsWhenWalkedOn" with a normal duration will flicker on/off as it is reapplied because such a buff DOES end.
+To have a proper display without tooltip spam you need to make the DISPLAYED buff work without a duration.
+
+How not to do it:
+<buff id="sleeping" stack="discard" name_key="sleeping" duration="1" description_key="sleepingDesc" tooltip_key="sleepingTooltip" icon="ui_game_symbol_map_bed">
+	<modify id="0" stat="health" amount="1" rate="30" />
+</buff>	
+
+See how it works in the A14 buffs.xml.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Drowning buffs used to be "half hardcoded". They no longer are.
+
+If you enter water, "cannotBreath" is cast.
+If you leave water, "freshAir" is cast.
+
+What happens inbetween can now be altered.
+
+TBH, I don't *quite* trust this, yet. If you manage to break this in a reproducible fashion, speak up! =)
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Custom variables:
+
+buffif="myVar lequal 0" 
+A variable needs to CHANGE for such a condition to trigger.
+
+All by itself this never triggers unless something else changes the variable.
+
+If you want to start any processes on player characters you need to trigger this off a variable that
+you know will change such as
+buffif="coretemp lequal 300"
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+FYI:  actions="damage()"
+is currently bugged and does not affect zombies.
+I reworded the remaining buffs that should affect them to use "modify" instead.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Auto-gender player sounds on buffs are working... again!
+
+<buff id="autogendertest" duration="1" castsound="Player_*painlg1"/>
+
+The game translates that into
+	Player_Male/player1painlg1
+	Player_Female/player2painlg1
+as needed.
+
+The sound still has to be assigned in sounds.xml.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Icons usable for buffs:
+(some may be nonsense or not even work but hey - not my problem)
+
+Checkmark.tga                                                         
+map_poi_editor.png                                                    
+map_spawn.png                                                         
+map_static_spawner_editor.png                                         
+server_icon_vac.tga                                                   
+star 1.png                                                            
+star.png                                                              
+ui_game_filled_circle.tga                                             
+ui_game_header_fill.tga                                               
+ui_game_header_fill_gradient.tga                                      
+ui_game_header_insert.tga                                             
+ui_game_panel_header.tga                                              
+ui_game_popup.tga                                                     
+ui_game_select_row.tga                                                
+ui_game_shape_arch.tga                                                
+ui_game_shape_cone1m.tga                                              
+ui_game_shape_corner_round_1m.tga                                     
+ui_game_shape_corner_rounded.tga                                      
+ui_game_shape_cube.tga                                                
+ui_game_shape_cube_half.tga                                           
+ui_game_shape_cube_quarter.tga                                        
+ui_game_shape_plate.tga                                               
+ui_game_shape_plate_25cm.tga                                          
+ui_game_shape_plate_wall.tga                                          
+ui_game_shape_pole_0.5m.tga                                           
+ui_game_shape_pole_1m.tga                                             
+ui_game_shape_pole_square.tga                                         
+ui_game_shape_ramp.tga                                                
+ui_game_shape_ramp_corner_filler.tga                                  
+ui_game_shape_ramp_inside_corner.tga                                  
+ui_game_shape_ramp_outside_corner.tga                                 
+ui_game_shape_stairs.tga                                              
+ui_game_shape_stairs_filled.tga                                       
+ui_game_shape_stairs_filled_corner.tga                                
+ui_game_shape_wedge60.tga                                             
+ui_game_shape_wedge60_tip.tga                                         
+ui_game_shape_wedge60_tip_corner.tga                                  
+ui_game_shape_wedged_corner.tga                                       
+ui_game_stat_bar_health.tga                                           
+ui_game_stat_bar_stamina.tga                                          
+ui_game_symbol_add.tga                                                
+ui_game_symbol_airdrop.tga                                            
+ui_game_symbol_all_blocks.tga                                         
+ui_game_symbol_allies.tga                                             
+ui_game_symbol_archery.tga                                            
+ui_game_symbol_armor_iron.tga                                         
+ui_game_symbol_armor_leather.tga                                      
+ui_game_symbol_arrow_left.tga                                         
+ui_game_symbol_arrow_max.tga                                          
+ui_game_symbol_arrow_right.tga                                        
+ui_game_symbol_assemble.tga                                           
+ui_game_symbol_backpack.tga                                           
+ui_game_symbol_battery.tga                                            
+ui_game_symbol_beer.tga                                               
+ui_game_symbol_block_damage.tga                                       
+ui_game_symbol_block_repair.tga                                       
+ui_game_symbol_block_upgrade.tga                                      
+ui_game_symbol_book.tga                                               
+ui_game_symbol_brokenbone.tga                                         
+ui_game_symbol_bullet_point.tga                                       
+ui_game_symbol_campfire.tga                                           
+ui_game_symbol_cement.tga                                             
+ui_game_symbol_chair.tga                                              
+ui_game_symbol_character.tga                                          
+ui_game_symbol_check.tga                                              
+ui_game_symbol_chemistry.tga                                          
+ui_game_symbol_climb.tga                                              
+ui_game_symbol_clock.tga                                              
+ui_game_symbol_club.tga                                               
+ui_game_symbol_coffee.tga                                             
+ui_game_symbol_coin.tga                                               
+ui_game_symbol_cold.tga                                               
+ui_game_symbol_compass.tga                                            
+ui_game_symbol_computer.tga                                           
+ui_game_symbol_cookware.tga                                           
+ui_game_symbol_critical.tga                                           
+ui_game_symbol_death.tga                                              
+ui_game_symbol_defense.tga                                            
+ui_game_symbol_diamond.tga                                            
+ui_game_symbol_door.tga                                               
+ui_game_symbol_drive.tga                                              
+ui_game_symbol_drop.tga                                               
+ui_game_symbol_drunk.tga                                              
+ui_game_symbol_dysentery.tga                                          
+ui_game_symbol_electric_generator.tga                                 
+ui_game_symbol_electric_max_power.tga                                 
+ui_game_symbol_electric_outlet.tga                                    
+ui_game_symbol_electric_plugin.tga                                    
+ui_game_symbol_electric_power.tga                                     
+ui_game_symbol_electric_solar.tga                                     
+ui_game_symbol_electric_switch.tga                                    
+ui_game_symbol_electric_turret.tga                                    
+ui_game_symbol_fire.tga                                               
+ui_game_symbol_food_poisoning.tga                                     
+ui_game_symbol_forge.tga                                              
+ui_game_symbol_fork.tga                                               
+ui_game_symbol_gas.tga                                                
+ui_game_symbol_gunsmithing.tga                                        
+ui_game_symbol_hammer.tga                                             
+ui_game_symbol_hand.tga                                               
+ui_game_symbol_horn.tga                                               
+ui_game_symbol_hot.tga                                                
+ui_game_symbol_hunger.tga                                             
+ui_game_symbol_infection.tga                                          
+ui_game_symbol_invite.tga                                             
+ui_game_symbol_keypad.tga                                             
+ui_game_symbol_knife.tga                                              
+ui_game_symbol_light_armor.tga                                        
+ui_game_symbol_lightbulb.tga                                          
+ui_game_symbol_lock.tga                                               
+ui_game_symbol_loot_sack.tga                                          
+ui_game_symbol_map.tga                                                
+ui_game_symbol_map_bed.tga                                            
+ui_game_symbol_map_cabin.tga                                          
+ui_game_symbol_map_campsite.tga                                       
+ui_game_symbol_map_cave.tga                                           
+ui_game_symbol_map_city.tga                                           
+ui_game_symbol_map_civil.tga                                          
+ui_game_symbol_map_cursor.tga                                         
+ui_game_symbol_map_fortress.tga                                       
+ui_game_symbol_map_house.tga                                          
+ui_game_symbol_map_player_arrow.tga                                   
+ui_game_symbol_map_town.tga                                           
+ui_game_symbol_map_trader.tga                                         
+ui_game_symbol_map_waypoint_remove.tga                                
+ui_game_symbol_map_waypoint_set.tga                                   
+ui_game_symbol_medical.tga                                            
+ui_game_symbol_mic.tga                                                
+ui_game_symbol_minibike.tga                                           
+ui_game_symbol_mining.tga                                             
+ui_game_symbol_misc_crafting.tga                                      
+ui_game_symbol_muscle.tga                                             
+ui_game_symbol_natural_healing.tga                                    
+ui_game_symbol_noise.tga                                              
+ui_game_symbol_oxygen.tga                                             
+ui_game_symbol_paint_allsides.tga                                     
+ui_game_symbol_paint_brush.tga                                        
+ui_game_symbol_paint_bucket.tga                                       
+ui_game_symbol_paint_copy_block.tga                                   
+ui_game_symbol_paint_eyedropper.tga                                   
+ui_game_symbol_paint_roller.tga                                       
+ui_game_symbol_paint_spraygun.tga                                     
+ui_game_symbol_pen.tga                                                
+ui_game_symbol_percent.tga                                            
+ui_game_symbol_perk.tga                                               
+ui_game_symbol_pills.tga                                              
+ui_game_symbol_ping.tga                                               
+ui_game_symbol_pistol.tga                                             
+ui_game_symbol_player.tga                                             
+ui_game_symbol_players.tga                                            
+ui_game_symbol_quality_joe.tga                                        
+ui_game_symbol_quest.tga                                              
+ui_game_symbol_quest_remove.tga                                       
+ui_game_symbol_radiation.tga                                          
+ui_game_symbol_resource.tga                                           
+ui_game_symbol_rifle.tga                                              
+ui_game_symbol_rotate_advanced.tga                                    
+ui_game_symbol_rotate_auto.tga                                        
+ui_game_symbol_rotate_on_face.tga                                     
+ui_game_symbol_rotate_simple.tga                                      
+ui_game_symbol_run.tga                                                
+ui_game_symbol_safe.tga                                               
+ui_game_symbol_science.tga                                            
+ui_game_symbol_scrap.tga                                              
+ui_game_symbol_search.tga                                             
+ui_game_symbol_seats.tga                                              
+ui_game_symbol_service.tga                                            
+ui_game_symbol_shirt.tga                                              
+ui_game_symbol_shopping_cart.tga                                      
+ui_game_symbol_shotgun.tga                                            
+ui_game_symbol_skills.tga                                             
+ui_game_symbol_skull.tga                                              
+ui_game_symbol_sledge.tga                                             
+ui_game_symbol_smell.tga                                              
+ui_game_symbol_spatula.tga                                            
+ui_game_symbol_speed.tga                                              
+ui_game_symbol_splint.tga                                             
+ui_game_symbol_star.tga                                               
+ui_game_symbol_stunned.tga                                            
+ui_game_symbol_subtract.tga                                           
+ui_game_symbol_tailoring.tga                                          
+ui_game_symbol_talk.tga                                               
+ui_game_symbol_tea.tga                                                
+ui_game_symbol_temperature.tga                                        
+ui_game_symbol_thirst.tga                                             
+ui_game_symbol_tool.tga                                               
+ui_game_symbol_tool_smithing.tga                                      
+ui_game_symbol_treasure.tga                                           
+ui_game_symbol_trophy.tga                                             
+ui_game_symbol_unlock.tga                                             
+ui_game_symbol_vending.tga                                            
+ui_game_symbol_water.tga                                              
+ui_game_symbol_weapon_smithing.tga                                    
+ui_game_symbol_weight.tga                                             
+ui_game_symbol_wet.tga                                                
+ui_game_symbol_wind.tga                                               
+ui_game_symbol_workbench.tga                                          
+ui_game_symbol_wrench.tga                                             
+ui_game_symbol_x.tga                                                  
+ui_game_symbol_zombie.tga                                             
+wedge_tip_half.tga

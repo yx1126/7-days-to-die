@@ -1,0 +1,20 @@
+File: RECIPES.XML
+
+Use of "Extends" is not supported for recipes.
+
+
+<recipe name="wroughtIronFenceSheet" count="1" scrapable="False" craft_area="forge" craft_tool="anvil" material_based="true">
+<recipe name="gunAK47" count="1" scrapable="False" craft_area="assembly">
+
+Usable craft areas ( = block name of the crafting station) and tools:
+
+forge		[anvil | forgeCrucible | toolAndDieSet]
+campfire	[cookingPot | cookingGrill | beaker]
+cementMixer
+backpack ?
+
+assembly (weapon screen)
+
+Note that (almost) all recipes have been changed to only output 1 unit.
+This is because the UI still does not tell you how many units would be
+produced and it was easier to just juggle the recipes.

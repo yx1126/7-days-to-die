@@ -1,0 +1,515 @@
+File: ITEMS.XML
+
+Keys:
+	"Active"
+	"Armor"
+	"Candrop"
+	"Canhold"
+	"Class"
+	"Concussive"
+	"Degradation"
+	"DegradationBreaksAfter"
+	"DegradationFloor"
+	"DropMeshfile"
+	"EconomicValue"
+	"EconomicBundleSize"
+	"Extends"
+	"HandMeshfile"
+	"HoldType"
+	"ImageEffectOnActive"
+	"Material"
+	"Meshfile"
+	"Pos"
+	"Preview"
+	"Puncture"
+	"RepairAmount"
+	"RepairTime"
+	"RepairTools"
+	"Rot"
+	"Stacknumber"
+	"Zoom"
+
+Attributes:
+	"belt_range"
+	"belt_strength"
+	"duration"
+	"heat_map_strength"
+	"heat_map_time"
+	"holster"
+	"id"
+	"muffled_when_crouched"
+	"name"
+	"newmodel"
+	"prio"
+	"range"
+	"ray_cast"
+	"ray_cast_moving"
+	"speed"
+	"strength"
+	"time"
+	"two_handed"
+	"unholster"
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Material types
+	material="wood|metal|organic|bullet" 
+	
+	These *are* defined in materials.xml. If you need a new "scrapable" material it must be defined as such in materials.xml + recipes.xml.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Hold types / timers / delays / rate of fire
+
+Hold types are in misc.xml
+
+Speaking of - what these do is not exactly obvious.
+
+misc.xml - hold_type - ray_cast  is a delay in seconds.
+What it does depends on the item class/action.
+
+---
+For the "Eat" (and probably "UseOther") action:
+- This timer is started when you click / use an item.
+- You cannot switch toolbelt slots while this timer is running. (to not mess up the animation)
+- When THIS timer has run out, any item effects and buffs are applied on an "eat" action.
+- It does not prevent you from spam-clicking the item.
+	Doing so while the timer is running, both animation and timer start over.
+	The item effects/buffs are not applied until you stop clicking and let the timer run to completion.
+---
+For a pistol this timer has no discernible effect.
+---
+
+items.xml - action - delay  is a delay in seconds.
+
+- This timer prevents spam-clicking of a consumeable item and also is started when you click / use an item.
+- This controls the rate of fire of a weapon because you cannot "click" faster than that.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+UMA Slots
+
+EquipSlot: 	This defines protection values and general placement.
+	Head, Eyes, Face, Chest, Hands, Legs, Feet
+
+Layer: This defines the index of the mesh that will be placed.
+	0 = base mesh layer, where the nude underwear model resides. any item put on with a layer of 0 will remove the mesh already in that Equipment slot.
+	1 = First overlay layer, this will lay over top of anything on layer 0 in the same EquipSlot.
+	2 = Second overlay layer, this will lay over top of anything on layer 0 or layer 1 in the same EquipSlot
+
+UISlot:		This defines the slot in the character screen that this clothing belongs to and any slots that may need disabled.
+Headgear, Eyewear, Face, Shirt, Jacket, ChestArmor, Gloves, Backpack, Pants, Footwear, LegArmor
+
+:UI Slot mutex:
+	Sometimes one item will cover another slot and we do not want to allow usage of that slot until the covering clothing/armor is removed.
+	This can be done by prepending an 'x' to the UISlot name.
+
+Welding mask example
+<item id="000" name="weldingMask" material="metal" stacknumber="1" mesh_file="Items/Clothing/Head/prefabWeldingMask" hold_type="21" repair_tools="scrapMetal">
+	<property name="EquipSlot" value="Head"/>
+	<property name="Degradation" value="100" param1="true" />
+	<property class="Armor">
+        <property name="Melee" value="0.3"/> <!-- legacy names! -->
+        <property name="Bullet" value="0.2"/>
+        <property name="Puncture" value="0.2"/>
+        <property name="Blunt" value="0.25"/>
+        <property name="Explosive" value="0.1" />
+	<property name="Group" value="Clothing" />
+	<property class="UMA">
+		<property name="Mesh" value="armor_leather_helmet" />
+		<property name="Overlay" value="armor_leather_helmet" />
+		<property name="Layer" value="1" />
+		<property name="UISlot" value="Headgear, xFace, xEyewear" />
+	</property>
+</item>
+
+
+
+
+WEAPON PARTS EXAMPLE (obsolete in A17+)
+Below is an example of the values that need to be added to a weapon to give it parts. Part list should coincide with recipe.
+All parts must be filled in or the weapon will not work, period.
+<item id="40" name="pistol">
+        <property class="Parts">
+            <property name="Stock" value="partsPistol_grip" />
+            <property name="Receiver" value="partsPistol_receiver" />
+            <property name="Pump" value="partsPistol_parts" />
+            <property name="Barrel" value="partsPistol_barrel" />
+        </property>
+</item>
+
+
+PART ATTRIBUTE EXAMPLES
+Below is an example of the properties that must be added (or set) for parts to work correctly.
+	StackNumber: This must be 1 so we can use degradation.
+	Degradation: Any default value, the weapon quality system will change this later, it just has to be set.
+	Attributes: These currently will interpolate from,to (based on quality from worst to best) for each of the below attribute types.
+	Atttributes/Damage: 			min,max damage as value.
+	Atttributes/Accuracy: 		1 being worse accuracy (full offset multiplier) to 0 being best accuracy (0 offset) eg value="1,0" is correct, value="0,1" is wrong
+	Atttributes/FalloffRange: 	ray cast range in meters min,max
+	Atttributes/Degradation: 		points each part is degraded per shot
+
+<item id="212" name="partsPistol_parts">
+	<property name="Extends" value="partsMaster" />
+	<property name="DescriptionKey" value="partsPistolGroupDesc"/>
+	<property name="PartType" value="Pump" />
+	<property name="Weight" value="10" />
+	<property class="Attributes">
+		<property name="DegradationMax" value="30,600" />
+	</property>
+</item>
+<item id="213" name="partsPistol_barrel">
+	<property name="Extends" value="partsMaster" />
+	<property name="DescriptionKey" value="partsPistolGroupDesc"/>
+	<property name="PartType" value="Barrel" />
+	<property name="Weight" value="10" />
+	<property class="Attributes">
+		<property name="EntityDamage" value="5, 40" />
+		<property name="BlockDamage" value="1,3" />
+		<property name="Accuracy" value="1, 0.01" />
+		<property name="DegradationMax" value="30,600" />
+	</property>
+</item>
+
+   
+ARMOR ATTRIBUTE EXAMPLE
+	Removal of the Armor class in the item is completely optional, it's reverse compatible like the others. If no Armor class or values it'll only read Attributes and any missing ones will have a default value of 0 percent protection.
+	Each range for armor is a percentage value. 1 being full protection but the armor will take the damage as degradation instead. So higher protection means faster degradation which balances it out.
+	DegradationMin is the minimum percentage degradation that the armor can be taken down to.
+	
+	leatherBoots currently have been swapped to the scaling attribute system as an example.
+	
+	<property class="Attributes">
+		<property name="MeleeProtection" value="0.1, 0.5" /> 
+		<property name="BulletProtection" value="0.1, 0.3" />
+		<property name="PunctureProtection" value="0.1, 0.3" />
+		<property name="BluntProtection" value="0.15, 0.35" />
+		<property name="ExplosiveProtection" value="0.05,0.15" />
+		<property name="DegradationMin" value="0.1,0.5" />
+	</property>
+	
+WEAPON ATTACHABLES
+	Add the following property to a item to define it as a weapon attachable:
+	<property name="IsWeaponAttachment" value="true" />
+
+
+
+
+
+Action Experience
+<property name="ActionExp" value="1" />			(default value = 2)
+<property name="ActionExpBonusMultiplier" value="2" />	(default value = 10)
+
+	These go under an action, woodenClub is an example. That will handle actions.
+	On kill or destroy events the multiplier is applied.
+
+And for the repair and upgrade actions, each swing for repair or upgrade will give ActionExp amount
+of skill/playerExp, the action bonus multiplier is applied when fully upgading a block to it's next level.
+
+
+
+In the case of a recipe book, when first learned the multiplier is applied and after then
+only the action exp is applied but it's applied for EACH item in the book.
+Also, you only get "reading XP" for items that have a
+	<property name="ActionSkillGroup" value="Science"/>
+defined.
+You get XP to THIS group, not the crafting group of the item.
+
+
+Now, as for crafting skill exp,
+add these to anywhere inside an item that will be used as an ingredient, it's like the old ones but renamed for clarity's sake.
+
+	<property name="CraftingIngredientExp" value="4" />   (default value = 1)
+	<property name="CraftingIngredientTime" value="4" />   (default value = 1)
+
+Then the recipe skill gain and craft time will be calculated internally
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Weather survival / temperature rebalance
+
+Wetness is ONLY affected by the coat and hat slot.
+
+All heavy armor has 0 temperature insulation.
+
+All light armor has a max of +2 (hide), making it useful wearing furry armor in a snow biome while not making it a liability outside.
+
+Face and eye slot items offer a little damage protection but have zero effect on temperature or wetness.
+
+The majority of the temperature mod is on the coat slot items.
+It's too warm? Take off that puffer coat.
+
+General clothing items like pants and shirts warm you from +1 to +5. HazMat 6.
+
+Some clothing items that cool you are t-shirts (-5) or cowboy hats (-10).
+The poncho is -20. Because Clint Eastwood looked good in it.
+ 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Food healing balance when eating food
+
+Healing = ( Food + Food * Wellness ) / 2
+
+Food poisoning counts as -1 wellness so 17 food with 100% Food Poisoning is 0 healing.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Unlocking a recipe:
+
+	<property class="Action1">
+		<property name="Recipes_to_learn" value="gunRocketLauncher,rocket,rocketCasing,rocketTip" />
+		<property name="ActionExp" value="50"/>
+	</property>
+
+
+Instead of unlocking a list of recipes you can now learn / unlock a list of skills and perks.
+1 point or level per book and skill.
+
+	<property class="Action1">
+		<property name="Class" value="GainSkill" />
+		<property name="Skills_to_gain" value="Treasure Hunter,Blunt Weapons" />
+	</property>
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+All items have a "Stacknumber" and tags for batch-modding:   (you're welcome)
+ <!-- STK ammo -->
+ <!-- STK book -->
+ <!-- STK explosives -->
+ <!-- STK food -->
+ <!-- STK drink -->
+ <!-- STK loot -->
+ <!-- STK medical -->
+ <!-- STK repairKit -->
+ <!-- STK resource -->
+ <!-- STK torch -->
+
+	Replace (using regex)
+	value=".*?" /> <!-- STK resource -->
+	with	
+	value="675" /> <!-- STK resource -->
+
+	and you have adjusted everything that is used for crafting and does
+	nothing useful (like healing or eating) beyond that.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Buffs / Items / Critical hits / Melee :
+
+This is a bit tricky.
+
+A BUFF can have a property 
+	critical="true"
+
+That means that in addition to the (items) "Buff_chance" listed,
+the buff DOES NOT FIRE if it fails
+the SECONDARY roll against (items) "CritChance".
+
+"CritChance" listed is the base chance and can fluctuate up and down a bit depending on your current stamina.
+	
+So with
+"Buff_chance" and "CritChance" both at 0.3
+you have an average chance of about 0.09 to ACTUALLY apply the buff.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Items can be excluded from underwater use.
+
+	<property name="UsableUnderwater" value="false" />
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+If an item adds a buff and this buff has no
+name_key
+assigned, neither the buff nor it's proc chance are listed on the item.
+
+This is useful to trigger random food effects, rarely getting an infection from
+a dirty needle on a blood draw kit... use the nasty side of your imagination.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Use delay of items
+
+While an item action can define a delay, it does not block you from spamming the button.
+
+misc.xml:
+        <hold_type id="22" newmodel="false" ray_cast="0.5" holster="0" unholster="0.2" />        <!-- 22 sham -->
+
+ray_cast is the delay that actually does that.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+"Stacknumber"
+
+If an item has 
+
+	<property class="Attributes">
+	</property>
+
+or
+	<property class="Parts">
+	</property>
+
+it's Stacknumber = 1 and does not need to be defined.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+Zombie limb dismemberment
+=====================================================================
+This is work in progress.  15.1.  Or later.
+
+A zombie limb has no defined hit points.
+A zombie only has one hit point pool and DAMAGE to a limb is tracked.
+The only hit point values that go into the formula are the zombie's max HP and accumulated damage to specific limbs.
+
+I collated and translated that into pseudocode... mostly so I'd have something compact to reference. =)
+
+
+private float GetDamageFraction(float _damage) { return _damage / zombie.GetMaxHealth() ;}
+
+
+GetDamageOverlimit = Max(0, GetDamageFraction(bodyDamage.RightLowerLeg + _damage)- ec.LowerLegDismemberThreshold)
+
+baseChance = ec.LowerLegDismemberBaseChance + (GetDamageOverlimit * ec.LowerLegDismemberBonusChance);
+
+totalChance = canDismember ? (baseChance + _weaponBase + (_damage * _weaponBonus)) : 0f;
+
+
+totalChance is the actual chance for limb dismemberment.
+
+=====================================================================
+=====================================================================
+
+Balancing, tool / weapon balance
+
+
+General balancing rule for tools: Iron should be 2x as good as stone, and steel 1.5x as good as iron. Steel to have great durability.
+
+
+Weapons: 
+In general, the low end damage of a weapon will be 40% of the max damage.
+For "newbie" weapons, the low end damage may be higher because these weapons are supposed to be replaced "soon" anyway.
+
+
+
+Armor:
+In general, the low end armor will be 40% of the max armor.
+
+Maxed out armor skills will ADD 20% on top of item armor values. They no longer multiply the armor value.
+If accumulated armor values + skill buff exceeds 100% the player becomes invulnerable.
+Don't do that. Unless you want to. Then go nuts.
+
+Important point on armor balancing:
+The Mark 1 zombie does 10 damage.  If your armor = 0.08 it reduces this damage by INT(0.08 * 10) or in other words 0 damage.
+
+Skills *can* multiply armor skills but this is a terrible idea because light armor will always suck and if you push the values, leather will be OP.
+I switched to adding flat protection from skill which is much easier to balance and let me make clothing or hide armor *work* as armor.
+
+Light armor at high QL and skill can actually be decent protection now which may just be useful in a snow biome.
+Heavy armor (+ max skill, +rare armor at max QL) can get up to 95% melee protection.
+Getting that is not realistic so hey... keep making those first aid kits.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+How armor worked in A13:
+To be honest ahh... not too well.
+
+If equipment slots are empty but you *are* wearing a full suit of armor, hits can go through without impacting armor.
+If you wear armor (or anything), the AVERAGE protection value of all "connected" slots
+(chest armor, overcoat, shirt) applies. Wearing a shirt kind of halves the value of your iron chest armor. Because of reasons.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+How armor works in A19+
+
+We are not doing localised damage. All armor pieces get hit simultaneously.
+
+If you get hit for 30 damage and your armor absorbs 12 of that then your armor is hit for 12 durability damage.
+
+If you wear 5 armor pieces then the damage is split among them, so 2.4 (rounded up to 3) per piece.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(Weapon) Degradation rate:
+Every hit/shot costs this much durability to a weapon or part.
+On the high end of the range you must add +1 to the value you *want* because the durability is an integer.
+
+<property name="DegradationRate" value="4,1" />
+Durability is an integer. With the exception of a single QL, the DegradationRate turns into something like 3.97... and is rounded down to 3.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+A14:
+Durability for firearms and motor tools has been increased roughly x10.
+
+As a result it is now possible to largely balance durability (how many shots until broken) and
+cost (how many repairKits for a full repair) independently! (how cool is that?)
+
+A weapon with 4 parts and 6000 durability each can cost 6000 points or 3 repair kits to fully repair.
+
+If I want this weapon to break after 350 shots:
+	<property name="DegradationRate" value="17,17" />
+
+If I want this weapon to break after 520 shots:
+	<property name="DegradationRate" value="11,11" />
+
+In both cases the repair cost remains constant. That is a Big Deal for balancing.
+
+
+You will also see 
+	<property name="DegradationRate" value="16,34" />
+Degradation is actually HIGHER at higher quality levels.
+
+Now you have a choice. Use a low quality bargain-bin gun that is cheaper to maintain... or use the
+high-tech-chrome-plated-with-cherries-on-top version and deal with the maintenance cost.
+I'm evil like that.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Ballistic weapons with bullet drop.
+
+Experimented with and while it works technically it was canned due to... circumstances.
+
+<item id="153" name="762mmBulletFMJ">
+	<property name="Meshfile" value="Items/Weapons/Ranged/HuntingRifle/762mm_bulletPrefab" />
+	<property name="Material" value="brass" />
+	<property name="HoldType" value="21" />
+	<property name="Stacknumber" value="500" /> <!-- STK ammo -->
+	<property name="CraftingSkillGroup" value="Gun Smithing"/>
+	<property name="EconomicValue" value="200" />
+	<property name="Group" value="Ammo/Weapons" />
+	<property class="Action1">
+		<property name="Class" value="Projectile" />
+		<property name="Explosion.ParticleIndex" value="0" />
+		<property name="Velocity" value="700" />
+		<property name="FlyTime" value="0" />
+		<property name="LifeTime" value="3" />
+	</property>
+</item>
+
+By entering roughly the real muzzle velocity of a weapon you get a decent starting point.
+This was for a bullet drop of roughly 1 head at 100m.
+Not using that because the headshot mod then needs to be on the projectile and if I don't want to redo the balancing
+it means splitting the ammo types into .308 / 7.62x51 / 7.62x39... for even more inventory clutter.
+
+Note that a simple raycast gun ("Class" value="Ranged") can actually use a ("Class" value="Projectile") as ammo so you could
+have the sniper rifle have bullet drop but handwave it on the shorter-ranged AK where the recoil makes it largely irrelevant.

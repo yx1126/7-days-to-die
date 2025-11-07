@@ -1,0 +1,33 @@
+File: SOUNDS.XML
+
+Sound Data Node
+	"AudioSourceName"
+	"ClipName"
+	"Loop"
+	"NetworkAudioSourceName"
+	"audioclip"
+	"audiosource"
+	"crouchnoisescale"
+	"heat_map_strength"
+	"heat_map_time"
+	"ignoredistancecheck"
+	"immediate"
+	"localcrouchvolumescale"
+	"maxentities"
+	"maxrepeatrate"
+	"maxvoices"
+	"muffled_when_crouched"
+	"networkaudiosource"
+	"noise"
+	"noisescale"
+	"prio"
+	"time"
+
+Attributes:
+	"crouchVolume"
+	"localCrouchVolume"
+	"localVolume"
+	"maxvoices"
+	"priority"
+	"rate"
+	"volume"

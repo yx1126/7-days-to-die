@@ -1,0 +1,923 @@
+File: BLOCKS.XML
+
+The block naming convention for "basic" blocks (with interchangeable textures) is
+[material|look|texture] [shape] [extra properties if needed]
+
+[Materials]: Generally speaking, the texture. If you search for "concreteTrimBlock" because you need that look, having "Trim" as an extra property after the shape might not be helpful.
+
+[Shape]: keeping it non-technical if possible.
+
+block - basic full meter square.
+half - value="Half"
+quarter - value="Quarter"
+eighth - value="Eighth" 
+pyramid - value="Pyramid"
+sheet - one side of a block, a billboard
+sheet2 - value="shantyWall01Sheet2" - "shantyWall04Sheet2"
+sheet3 - value="curtain"
+sheet4 - value="HousingDecor/Boarded_windows" or other custom models
+CTRSheet - like windows or glass panes
+ramp - the basic 45 degree triangle shapes
+stairs25 - value="StairsFilled" / "StairsFilledVerticalUV" 25 cm steps
+stairs50 - value="StairsQuarterFilled" 50 cm steps
+stairsBoard - value="Stairs"
+pole - value="Pole"
+poleSupportCtr - value="pole_diagonal_centered"
+poleSupport - value="pole_diagonal"
+poleSupport2 - value="pole_diagonal_2"
+crossCtr - value="pole_diagonal_centered_cross"
+cross - value="pole_diagonal_cross"
+plate - value="Plate"
+CTRPlate - value="PlateCentered"
+TRN - value="Terrain" 
+wedge - value="Wedged60Full"
+wedgeTip - value="Wedged60Tip"
+curb - sidewalk  value="Curb"
+CNRCurb - value="Curb_Corner"
+pillar100 - value="Pole1m" 100 cm version
+pillar50 - 50 cm version
+CNRFull - value="WedgedCornerFull" corner with a full (square) base for outside pyramid roofs
+CNRRamp -  value="WedgedCorner" corner with a half (triangle) base for outside pyramid roofs
+CNRInside - value="WedgedInnerFull"  concave shape for roofs
+CNRRound - value="corner_round1m"
+gable - value="Gable" small triangle tip for roofs
+support  - value="Branch", 45° angled beam
+
+Example
+
+awningRedBlock
+rebarFrameRamp
+rConcreteCNRFull
+rConcretePlate
+curtainBottomSheet01
+sandTRN
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+NOTE: This plan was implemented only partially (tree, cnt) - maybe some day... or another system will be used.
+I'll leave it in for future reference. Gazz
+
+Many blocks like "scrapIronPile" have unique models / shapes.
+For these I would use 
+MDL [type|category] [Name]
+
+
+
+[Type]:
+
+cnt - container, typically loot;  (I would call block-based containers like "CntWeaponsBlock")
+      I would also mislabel the damage 2 car so it stays with the others.
+      Useful filters and a useful list >> strict adherence to rules.
+      Also containers that downgrade into loot containers. "cntSupplyCrateShamway"
+fnt - furniture. Desks, chairs, potted plants
+elt - electrical things like control panels that we don't have a clear purpose for, yet
+lgt - all lights, including wall torches and candles
+tree - trees, grass, shrubbery, cactus
+plt - all other plants, shrubberiers, farming crops, or blocks that fulfil the purpose of a plant even if its just a pickup.
+wrk - workstation of any kind
+trp - traps, spikes, mines that DO something 
+sgn - signs
+dst - destroyed or damaged... something.
+prt - particle effects like snowstorm
+drw - doors, hatches, windows
+otr - other
+
+This allows you to filter by categories, such as "find me all trees". It doesn't break the full text search.
+
+Example
+
+MDLdrwSteelDoor1_v1
+MDLfntSchooldesk
+MDLcntCooler 
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Use of "Extends" in blocks.xml:
+
+This can be tricky so pay attention. =)
+
+"Extend" copies upgrade and downgrade blocks/properties.
+As you can see in the file you can mix and match, keeping the upgrade material and amount thereof but overwriting the target block.
+
+
+For repairs you cannot un-extend a material.
+
+If you extend a wooden door that is repaired with wood, then use that to make a metal door...
+the metal door will require the wood in addition to the metal repair materials you assign.
+
+
+Blocks using extends now do give the resources from the parent's destroy event.
+If a block is using extends, but has its own destroy event, it will use that one instead.
+
+
+<block id="1456" name="cntCar03Red">
+
+	<drop event="Fall" name="cntCar03BlueDamage1" count="0" prob="0" stick_chance="1" />
+	<drop event="Fall" name="cntCar03WhiteDamage1" count="1" prob="1.0" stick_chance="1" />
+
+Without "unextending" that *specific* property the drop would be a cntCar03BlueDamage1 if that's the fall event of the parent block.
+
+
+Extend should be the first entry in a block / item.
+The file is read sequentially and if you put 
+	<property name="Shape" value="WedgedCornerFull" />
+above the extend it reads that line and THEN reads all the properties from
+the parent block - including the shape.
+
+
+Also:
+Extend CAN NOT extend from a model
+<block id="431" name="mineCandyTin">
+to a shape
+<block id="1408" name="rScrapIronPlateMine">
+
+Sure, you can do it but then the texture atlas cannot be baked because the block inherits properties that it shouldn't.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Selective "Extends"
+
+For blocks/items.xml you need to use this syntax:
+<property name="Extends" param1="<excluded defs>" />
+
+
+for entityclasses.xml like this:
+<.... ignore="<excluded defs>" ... >
+
+Excluded defs are properties like "Downgrade" or "FuelValue" (comma delimited)
+so you can better tailor an extended block to your needs.
+
+We cannot exclude the drop definitions so far
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+<property name="CanMobsSpawnOn" value="true" />
+
+The default value for a block is now FALSE.
+
+Static spawners in prefabs / POI completely ignore this flag.
+
+
+A placed bedroll ("your" bedroll, not any that exists) works like a claim stone.
+It blocks zombie spawns in a rectangular area of 31x31 meters from bedrock to sky.
+(that's 15 + 1 + 15m)
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+<drop event="Destroy" name="scrapIron" count="1,2" prob="1" />
+
+count="min,max" specifies the min/max count, prob="x" specifies if ANY are dropped with this probability.
+This is only applied to the very last destroy event on a block.
+It cannot be used on a harvest event as here the total amount has to be fixed.
+
+
+<drop event="Destroy" name="[recipe]" />
+half of the ingredients of the first recipe for this item/block are awarded.
+Currently it's always half and you cannot specify a factor.
+Also if you specify a [recipe] you cannot/should not specify other items for this drop event.
+
+
+Without a destroy event the block will always "drop self".
+You can use this to make road signs or anything else collectible.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Looping fall events.
+
+<drop event="Fall" name="destroyedStone" count="1" prob="0.1"  stick_chance="1" />
+
+If a falling block decides to "stick" on top of a block with
+	<property name="StabilitySupport" value="false" />
+it will fall again.
+
+Then it will stick on top of the same block again.
+Then... do you see a pattern there?
+
+Either completely avoid blocks falling "as themselves" or assign a stick chance <1 so it would eventually give up and poof.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+You can change the crafting skill of blocks.
+Look at the land mines.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Collision masks
+
+	<property name="Collide" value="melee,bullet,rocket" />
+	<property name="Collide" value="meleeweapons,bullets,rockets" />
+
+These are functionally identical. Only the start of the string is checked.
+
+
+Personal preference:
+
+<block id="385" name="metalTrussingBlock">
+	<property name="Collide" value="movement,melee,rocket" /> <!-- -rocket -->
+
+In *my* opinion you should be allowed to shoot arrows through those if bullets fit.
+If you agree you can remove all occurrences of this with one search&replace.
+
+Keep in mind that this also allows rockets to pass so
+it *can* be a problem depending on your server settings and rules.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(A17) The Path property
+	<property name="Path" value="solid"/>
+	This is a shortcut for the AI pathfinding and quickly determines that this block (like a forge or pillar100) can not be pathed into from any direction.
+	Blocks using Model cube, cube_glass and cube_frame are automatically flagged.
+
+	May or may not work / be used:
+	<property name="Path" value="edge"/>
+	This is used for something like a cornered pole block where the AI is directed to look at the edges of the block space to find an obstacle.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Butcher tools are currently not supported in blocks.
+Maybe later. Not a priority.
+
+	<drop event="Harvest" name="femur" tool_category="Butcher" count="1" prob=".4" />
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Disassembling (wrench)
+
+	<drop event="Destroy" name="barbedFence" count="1" tool_category="Disassemble" />
+	<drop event="Harvest" name="headlight" count="1" prob="0.2" tool_category="Disassemble" />
+
+Both harvest and destroy events can be limited to only fire if the correct tool is used.
+
+This does not disable ungated events. They fire as well.
+
+
+Note that you do NOT get the "disassemble" animation with just a destroy event.
+You need to do it this way:
+	<drop event="Harvest" name="" count="0" tool_category="Disassemble" />
+	<drop event="Destroy" name="workbench" count="1" tool_category="Disassemble" />
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Farming / Harvest yield of farmed crops.
+
+This only affects block class "CropsGrown".
+
+The "fertile_level" (defined in materials.xml) of the block that the plant is growing on can affect the harvest yield.
+
+To use that you add 
+	<property name="CropsGrown.BonusHarvestDivisor" value="5.0" />    (float, default=VeryLargeNumber)
+
+to the to-be-harvested block.
+This will generate bonus items when the plant is harvested.
+
+The number of additional harvest items is
+
+= ( "fertile_level" of the block directly below ) / ( CropsGrown.BonusHarvestDivisor )
+
+So for a fertile_level of 5 and a BonusHarvestDivisor of 1.2 you get +4 harvest items.
+Now if you were to make some fertiliser and further increase the fertile level of the dirt...
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+PlantGrowing.IsRandom growth timers
+
+All the coders tell me that using "random" for the timer is much cheaper in CPU terms so that would be a good thing for a farm that can have thousands of plants.
+
+Unfortunately it was a bit short on the max duration so couldn't actually be used for anything.
+Now, when using PlantGrowing.IsRandom the max value for PlantGrowing.GrowthRate has been increased to 63.
+
+At the setting of 63 I timed that to be 43 - 106 minutes.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Trees growing to variable sizes depending on the soil.
+
+Any plant/block using
+<property name="PlantGrowing.
+
+to upgrade will check the 
+
+<property name="PlantGrowing.FertileLevel" value="xxx" />
+of the TARGET block first.
+
+If this  PlantGrowing.FertileLevel  is higher than the  fertile_level  of the block directly below then the upgrade will not occur.
+Score one for biome diversity. =)
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Support and multiblocks
+
+(A15) On destruction, blocks with "MultiBlockDim" are properly cleaned up, leaving no invisible support blocks in mid-air. (Sorry! =)
+
+
+Multiblocks and  <property name="StabilitySupport" value="false" />
+
+If the multiblock's Y dimension is >1 it will self destruct.
+
+
+In general, multiblocks can not have a horizontal dimension >7.
+Lead programmer said so and he knows things.
+He added a special exception for vertical dimension (trees).
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Upgrade and hit sounds
+
+When you upgrade a block then the tool plays a sound on every hit.
+This sound is from the material value of the upgrade RESOURCE.
+
+<property name="CustomUpgradeSound" value="Crafting/place_block_wood" />
+This sound is played once when the upgrade is taking effect.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Upgrade and hit sounds from textures
+
+Any 	<property name="Shape" value="ModelEntity" />
+does NOT need a texture entry.
+
+If one is given, the sound attached to the texture in blocktextures (and baked into that other file I cant remember)
+WILL play when this block is hit, overriding the block's material assignment.
+
+Any 	<property name="Shape" value="Ext3dModel" />
+DOES need a (dummy) texture entry.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Transparent / cutout meshes and frame blocks
+
+added <Property name="Frame"/> to each master frame block.
+
+This marks the block as a frame so in the code it sends a multiplier to the inside rendering to either happen or not.
+If the property is there then it will render the back faces of the geo, shrink it slightly (so z-fighting doesn't happen), and flip the normals to point inside.
+
+Related: 
+*Changed: Defaulted transparent blocks to have no backface culling per Joel’s request for glass blocks.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Global UV for dummies (A16)
+
+WTF is that?
+It means that if a texture is "global", the block texture will ALWAYS display with the same side up
+even if the block is rotated in a way that would display this side upside down or to the right.
+
+This is defined per texture in blocktextures.xml.
+(which does nothing until the (opaque) atlas is baked)
+
+On some faces (the steps of stairs) this is not desired because they would look wrong in some rotations. There you set it to local.
+
+This setting can be overridden in blocks.xml on a per block / face base:
+
+<property name="UseGlobalUV" value="D,D,L,D,D,G" />
+<property name="UseGlobalUV" value="Local" />
+<property name="UseGlobalUV" value="Global" />
+
+All values are case sensitive.
+D = use default from blocktextures.xml
+L = force local
+G = force global
+
+A16 features all new UV code so in principle it does not matter at all which "side" is actually facing which way.
+The only blocks that were set to local UV are those that do NOT match any adjacent (other) blocks that they might touch.
+Like poles, supports or pillars.
+Their texture would never "continue on an adjacent block" and for diagonal polesthe wood texture might as well "run the right way".
+So these use the local override on the block.
+
+PS: Normal people don't need to know any of these weird graphics shenanigans so don't worry about it.
+I'm only documenting this for a handful of crazies.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Something *I* stumbled over recently:
+
+While
+\Assets\Textures\Blocks\blocktextures.xml
+controls the setup (global/local) per texture, it does not directly affect the game.
+
+Rebuilding the texture atlas also generates
+\Assets\AssetBundles\BlockTextureAtlases\ta_opaquexml.txt 
+(for instance)
+
+and *that* file is what makes the textures use a default of local/global ingame.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Shape="new" and plants.
+
+The new shapes do not allow to pass light through them.
+
+This means the corn will not get any "AO light" at the base of the trunk and thus "die" instantly after planting.
+
+Add the property "LightOpacity" where needed.
+
+
+Also, a block uses the higher LightOpacity value of MATERIAL and SHAPE
+...and Shape="new" always has LightOpacity="255".
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Blocks and light and plants.
+
+There are 16 possible light values.
+
+Full sunlight = 15.
+Full darkness = 0.
+
+If the light is reduced by traveling through a block with LightOpacity="6" then the light value below this block is 9.
+
+Every square that light has to travel "sideways" to reach the block subtracts 1.
+
+Plants require 3 to grow.
+
+There may also be a max distance that light can travel horizontally.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Textures and the map.
+
+The "top" face of a block determines the pixel colour that it displays on the map UI.
+
+Here it's texture 277, bright blue.
+	<property name="Texture" value="277,574,576,577,578,575" />
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Block default placement:  Place + HandleFace
+
+Place overrides HandleFace so you can only have one or the other.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Upgrading and downgrading to random block targets.
+
+All of this... works now:
+
+	<property class="UpgradeBlock"> <property name="ToBlock" value="lootWasteland" /> </property>
+
+	<property name="DowngradeBlock" value="lootWasteland" />
+
+	<property name="UpgradeRated.ToBlock" value="lootWasteland" />
+
+	<property name="PlantGrowing.Next" value="lootWasteland" />
+
+Loot placeholders are defined in loot.xml.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(A17) SortOrder / Sort Order on the Creative menu.
+
+We changed the display order on the creative menu from "blindfold and dartboard" to something more organised.
+
+There are 2 properties for sortorder.
+	<property name="SortOrder1" value="x"/>  (string - try to keep it short for performance)
+	<property name="SortOrder2" value="y"/>
+
+When deciding in which order to display items on the creative menu,
+the game concatenates SortOrder1 and SortOrder1, then sorts by the resulting string.
+In the above example the sort string is "xy" and would sort below "xf".
+
+The reason for this split is that major groups like "brick blocks" can extend their SortOrder1 from the master material block.
+Individual shapes have their own specific SortOrder2.
+That makes the system modular and gives me fewer headaches.
+
+1. Category:
+	<property name="SortOrder1" value="A0003"/>
+	This is the "main group" and material.
+
+	1st character: Main group, blocks
+	   0 used for all items so they sort first
+	   4 Building 
+	   7 Decor
+	   a Outdoor
+	   d Terrain
+	   g Construction
+	   k Loot
+	   n Level Design	  
+
+	2nd character: Main group, items
+	   4 Tools/Traps
+	   7 Resources
+	   a Ammo/Weapons
+	   d Armor/Clothing
+	   g Food/Cooking
+	   k Science
+	   n Books
+	   q Special
+
+	3rd character: Block material or other apropriate major-ish category
+	   2 Wood
+	     woodNoUpgradeMaster
+	   3 woodWeakNoUpgradeMaster
+	   4 R  Wood
+	   5 RM Wood
+	   8 Brick
+	     brickNoUpgradeMaster
+	   9 Adobe
+	   a Flagstone
+	     stoneNoUpgradeMaster
+	   b Cobblestone
+	   e Scrap
+	     scrapIronNoUpgradeMaster
+	   f corrugatedMetalNoUpgradeMaster  / Trussing
+	   g R Scrap
+	   k Concrete
+	   l R Concrete
+	   m Wet Concrete (potentially needed for players. Sorry, guys. Level designers come first. LOL)
+	   n bulletproof glass
+	   p Steel
+	   q St Steel
+	   r Awnings / camo / haybale
+
+	   t Wood Frames
+	   u Scrap Frames
+	   v Rebar Frames
+	   
+	   3 Grass / foilage (billboard)
+	   6 Shrubbery
+	   9 crops
+	   c Tree
+	   d Tree stump / fallen logs
+	   e Cactus
+	   
+	   f terrain: stone
+	   h terrain: ores / clay
+	   k terrain: dirt
+           m terrain: snow / sand / sandstone
+	   o terrain: radiated / destroyed / debris / bedrock
+
+	3rd character for decorations:
+	<property name="SortOrder1" value="7060"/>
+
+	   3 decals
+	   6 Doors & Hatches
+	   8 Windows / curtains
+
+	   a Lighting / Hardware
+	   c cables
+	   e control panels, fuse boxes
+	   g Traps
+	   i Workstations
+	   k Furniture / faucets
+	   m Fences, railings, road railings
+	   	
+	   o sandbags
+	   s Signs
+	   t Specific Navezgane signs
+
+             
+	4th character: Item material or other apropriate major-ish category
+
+	   2 Tool
+	   4 Weapons Melee
+	   6 Weapons Bow
+	   8 Weapons Ranged
+	   a Ammo
+	   c Thrown/Explosives
+	   e Armor Light
+	   f Armor Heavy
+	   h Clothing
+	   j Food
+	   l Drink
+	   n Medical
+	   p Workstation upgrades like Cooking Pot
+	   r Skill unlock books like painting
+	   t Special
+	   v (Weapon) Parts
+	   x Resource
+
+2. Category:
+	<property name="SortOrder2" value="A0003"/>
+	This is the "sub group". Could be the block SHAPE or a clothing TYPE like shirt vs pants.
+
+	Sort order for standard building shapes:
+
+	0050	cube
+	0051	cube with 1 broken tile on top
+	0053	cube with 1 baseboard
+	0054	cube with 4 baseboard
+	0055	cube with 1 chair rail, cornerstones
+	0056	cube with 4 chair rail
+	
+	00561	cube_trim_half_split			  
+	00562	cube_trim_half_split_diagonal		  
+	00563	cube_trim_half_split_4sided		  
+	00564	cube_trim_quarter_edge			  
+	00565	cube_trim_quarter_edge_twosided		  
+	00566	cube_trim_quarter_corner_inside		  
+	00566	cube_trim_quarter_corner_inside_triangle
+	00567	cube_trim_quarter_corner_outside	  
+	00568	cube_trim_quarter_corner_outside_twosided 
+	00569	cube_trim_quarter_corner_outside_triangle 
+
+	0060	half
+	0060	half ctr
+	0061	HalfRampStairs50
+	0062	HalfRampStairs50Filler
+	0063	woodHalfCNRInside2
+	0064	cube_half_trim_half_split
+	0070	quarter
+	0071	CTRQuarter
+	0080	q corner
+	0090	q 3way
+	0091	Half3Quarter, half_inside_corner
+	0092	QuarterCNRQuarterPlate, wedge_tip_stairs_quarter_pole
+
+	0105	quarter S Ctr
+
+	0110	q T S Sctr
+	0110	q T ctr
+
+	0140	1/8
+	0142	1/8 CTR
+	0150	plate
+	0150	Plate_pole
+	0151	corner_round_plate
+	0152	plate_corner, 2PlateCorner
+	0160	ctr plate
+	0170	half plate
+	0171	plate offset
+	0180	sheet / billboard
+	0181-0184 bent sheets
+
+	0200	ramp
+	0201    ramp incline
+	0202    ramp incline fillers & corners
+	0204	cube_trim_quarter_ramp	
+	0210	full corner
+	0220	inside corner
+	0230	ramp corner  cnrramp
+	0240	ramp cnr filler
+	0250	gable
+	0255	gable_inverted_half
+	0260	pyramid
+	0265	gable_pyramid
+
+	0280	wedgetip
+	0290	wedge
+	0300	wedge full corner bott
+	0310	top
+	0320	steep crnn base
+	0330		top
+	0340	wedge inside corner bott
+	0350		top
+	0360	wedge steep inside crnr base
+	0370		top
+	0371	Wedge Incline Corner Top
+	0375	Wedge Narrow 1 Tip 11.25°
+	0376	Wedge Narrow 2 Low
+	0377	Wedge Narrow 3 Mid
+	0378	Wedge Narrow 4 High
+	0390	GableQuarter
+	0391	Gable3Quarter
+	0400	g  inverted quarter	 
+	0410	gable 1m
+	0420	g   inverted steep
+	0430	pyramid 1m
+	0440	wedge incline
+
+	0480	cnr round
+	0481	cube_trim_corner_round1m
+	0490	 top
+	0500	arch
+	0505	Tunnel 3m Center/Corner
+	0509	Tube 3m Center/Corner
+	0512	WindowCircle
+	0515	WindowArch
+	0518	ArchCurve
+
+	0520	WindowArch3MCNR
+	0521	WindowArch3MCTR
+	0522	WindowArch3MTip
+
+	0530	stairs 25
+	0540		rail left
+	0550		rail right
+	0560		corner
+	0570	wedge stairs bottom
+	0580		top
+	0590	Stairs50
+
+	0610	StairsBoard
+	0620	StairsBoardRailing
+
+	0640	Catwalk
+	0650	CatwalkRailing
+	0660	CatwalkRailingCNR
+	0670	CatwalkWedge
+	0680	CatwalkWedgeRailing
+	0690	Railing
+
+	0700-0705	Trussing Block
+	0710	IBeams
+
+	0732	pillar 100
+	0735	wood log (?)
+	0737	pillar 100 cap
+	0740	pillar 50
+	0744	pillar 0.05
+	0745	pillar 0.05 CTR
+	0746	pillar 0.05 SCTR
+	0750	pillar 0.025
+	0751	pillar 0.025 CTR
+	0752	pillar 0.025 SCTR
+
+	0780	pole
+	0790	ctr pole
+	0800	pole S ctr
+
+	0820	pole support
+	0830	pole support ctr
+	0840	p s 2
+	0850	support beam
+
+	0860	cross
+	0870	cross ctr
+
+	0900	arrow slit
+	0910	floor joist
+	0920	curbs
+
+=====================================================================
+
+
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Block Attributes:
+
+	"count"
+	"event"
+	"id"
+	"name"
+	"prob"
+	"stick_chance"
+	"tool_category"
+
+Keys:
+	"ActionSkillGroup"
+	"ActiveRadiusEffects"
+	"BigDecorationRadius"
+	"BuffsWhenWalkedOn"
+	"CanDecorateOnSlopes"
+	"CanMobsSpawnOn"
+	"CanPickup"
+	"CanPlayersSpawnOn"
+	"Class"
+	"Collide"
+	"Count"
+	"CraftComponentExpValue"
+	"CraftComponentTimeValue"
+	"CraftingSkillGroup"
+	"CustomIcon"
+	"Density"
+	"DescriptionKey"
+	"DestroyExpValue"
+	"DowngradeBlock"
+	"EconomicValue"
+	"EconomicBundleSize"
+	"Extends"
+	"FallDamage"
+	"FuelValue"
+	"Group"
+	"HeatMapFrequency"
+	"HeatMapStrength"
+	"HeatMapTime"
+	"IndexName"
+	"IsDeveloper"
+	"IsPlant"
+	"IsTerrainDecoration"
+	"LPHardnessScale"
+	"Light"
+	"LightOpacity"
+	"LootExpValue"
+	"Map.Color"
+	"Map.Color2"
+	"Map.ElevMinMax"
+	"Map.Specular"
+	"MaxDamage"
+	"Mesh"
+	"MovementFactor"
+	"MultiBlockDim"
+	"MultiBlockLayer"
+	"PickupSource"
+	"PickupTarget"
+	"Place"
+	"PlaceAltBlockValue"
+	"PlaceExpValue"
+	"PlacementWireframe"
+	"RepairItems"
+	"RotationAllowed"
+	"Shape"
+	"ShapeMinBB"
+	"ShowModelOnFall"
+	"SiblingBlock"
+	"SmallDecorationRadius"
+	"StabilitySupport"
+	"Stacknumber"
+	"Tag"
+	"Texture"
+	"UpgradeBlock.ToBlock"
+	"UpgradeExpValue"
+	"Weight"
+
+=====================================================================
+=====================================================================
+
+<property name="EconomicValue" value="xxx" />  (integer)
+
+"EconomicBundleSize" :
+Was put in because the coder did not want a float there. =)
+A trader will trade this many items as the smallest bundle. You won't be able to sell a single small rock.
+The "EconomicValue" applies to the bundle.
+
+
+The price of an assembled item (gun) is equal to the sum of it's parts.
+
+First step was to figure out *some* rules to get some consistency into this and not having to reinvent the wheel for every item.
+
+Rarity of the resource.
+In my latest game I have some 500 brass scrap and just the excavation for my base's walls got me about 100000 small rocks.
+I'm trying to figure out a base value for "how long does it take to acquire this resource".
+
+Forge required.
+Resource value x 1.2
+
+Common tool required. Cooking pot or grill - essentially free with a forge so does not stack with that bonus.
+Resource value x 1.2
+
+Rare tool required. Crucible, beaker...
+Resource value x 1.5
+
+Farming required. Not hard but time-consuming.
+Resource value x 1.33
+
+Skill / perk / recipe / special scavenging or disassembling required.
+There it gets muddy.
+Im thinking _up to_ x1.5 based on uhh... best guess?
+
+Can only be found: x5
+
+
+For a start I assigned these values in Duke Coins:
+
+5 brassScrap
+.5 paper
+.005 rockSmall
+.005 crushedSand
+.002 clay / dirtFragment
+.05 unitIron
+.2 unitLead
+1 unitBrass
+.25 ironScrap
+.6 forgedIron
+1.6 forgedSteel
+1 leadScrap
+.005 yuccaFibers
+.4 coal
+.4 potassiumNitratePowder
+1.5 bulletCasing
+.24 bulletTip
+1.6 gunPowder
+.48 buckshot
+.0072 cement
+.25 cloth
+3.5 ductTape
+.3 emptyJar
+1.5 bottledWater
+1.5 femur
+24 for 100 gasCan
+1 animalFat
+1.5 bioFuel
+1.2 tallow
+2.4 grainAlcohol
+.1 feather
+1 rawMeat
+1 egg
+.1 corn / potato / blueberry / goldenrod / cotton
+.5 mushrooms
+1 animalHide
+1.1 leather
+5 oil
+.11 ironArrowHead
+.37 steelArrowHead
+12 spring
+12 headlight

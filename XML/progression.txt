@@ -1,0 +1,36 @@
+File: PROGRESSION.XML
+
+
+FORMAT OF PASSIVE SKILL RANGES:
+
+Good:
+	<multiply skill_level="1,5" value="1,1.04" />
+	<multiply skill_level="5,11" value="1.04,1.07" />
+	<multiply skill_level="11,19" value="1.07,1.1" />
+Bad:
+	<multiply skill_level="1,5" value="1,1.04" />
+	<multiply skill_level="6,11" value="1.05,1.07" />
+	<multiply skill_level="12,19" value="1.08,1.1" />
+
+Do NOT "skip" any skill levels. The code does not like it. You want to make the code happy.
+Unhappy code may want to use you as reactor shielding.
+
+
+
+Repair balancing
+
+Known A15.0 bug:
+Repairing simple items like clubs does not work the same way as repairing assembled items like firearms.
+*Should be fixed for 16 - at least it's on the list*
+
+Club at QL 600:
+no skills: 100 QL loss, max skills: 10 QL loss and no loss at QL 119 and below.
+QL is multiplied.
+
+Assembled items:  (work in progress)
+no skills: 30 QL loss, max skills: 2 QL loss at every QL
+QL repair loss is strictly subtracted from the QL.
+
+Temporary workaround: Set all assembled items to "Gun smithing" and fudge the numbers to work out.
+
+Don't bother reporting that this is actually the case...

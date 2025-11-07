@@ -1,7 +1,0 @@
-<anan> 
- 
-  <append xpath="/styles/global[1]">
-     <style_entry name="Golden" value="255,255,0"/>
-  </append> 
-  
-</anan>
