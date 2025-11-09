@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="AutoTurretAndshotgunTurretAmmo" />
+	<DisplayName value="Auto Turret And shotgun Turret Ammo" />
+	<Description value="This mod changes the SMG Turret ammo And Shotgun Turret type to .44 9mm(AP HP) Shotgun Slug(ammoShotgunBreachingSlug) ammo " />
+	<Author value="YISHANG" />
+	<Version value="1.0" />
+	<Website value="https://www.twitch.tv/oldtimer_tv" />
+</xml>

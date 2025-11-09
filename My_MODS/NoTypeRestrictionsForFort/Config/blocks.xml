@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- <configs>
+    <csv xpath="/blocks/block[@name='autoTurret']/property[@name='AmmoItem']/@value" op="Add">ammo9mmBulletHP,ammo9mmBulletAP</csv>
+    <csv xpath="/blocks/block[@name='shotgunTurret']/property[@name='AmmoItem']/@value" op="Add">ammoShotgunBreachingSlug,ammoShotgunSlug</csv>
+</configs> -->
+
+
+<configs>
+    <append xpath="/blocks/block[@name='autoTurret']">
+        <property name="AmmoItems" value="ammo9mmBulletHP,ammo9mmBulletAP"/>
+    </append>
+    <append xpath="/blocks/block[@name='shotgunTurret']">
+        <property name="AmmoItems" value="ammoShotgunBreachingSlug,ammoShotgunSlug"/>
+    </append>
+</configs>
